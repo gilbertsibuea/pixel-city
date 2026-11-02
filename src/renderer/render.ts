@@ -210,13 +210,18 @@ export function renderCitySvg(model: CityModel): string {
 
 	const carColors = [PALETTE.e!, "#4a7fc0", "#c9a24d", "#7a5434"];
 	const vehicles: string[] = [];
+	// Mix lanes: even index L→R (faces right), odd index R→L (faces left).
 	for (let i = 0; i < model.cars; i++) {
+		const rev = i % 2 === 1;
+		const laneY = rev ? roadY + 1 : roadY + 5;
 		vehicles.push(
-			renderCar(roadY + 4, carColors[i % carColors.length]!, i * -3.5, false),
+			renderCar(laneY, carColors[i % carColors.length]!, i * -3.5, rev),
 		);
 	}
 	for (let i = 0; i < model.buses; i++) {
-		vehicles.push(renderBus(roadY + 3, -1.5 - i * 4.5, i % 2 === 1));
+		const rev = i % 2 === 0; // at least one bus goes R→L when buses >= 1
+		const laneY = rev ? roadY + 0 : roadY + 4;
+		vehicles.push(renderBus(laneY, -1.5 - i * 4.5, rev));
 	}
 
 	const pedestrians: string[] = [];

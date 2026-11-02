@@ -4,7 +4,7 @@ import { PALETTE } from "./buildings/palette";
 const S = 3;
 
 /**
- * Sprite legend (vehicles face RIGHT; `rev` is handled by your CSS class):
+ * Sprite legend (vehicles face RIGHT by default; `rev` flips the grid to face LEFT):
  *   b body (given color)   B body shade (auto, darker)   g glass
  *   w tire                 h hubcap                      l headlight
  *   t taillight            . transparent
@@ -38,8 +38,14 @@ function shade(hex: string, amount = 0.25): string {
 	if (!m) return hex;
 	const n = parseInt(m[1]!, 16);
 	const c = (v: number) =>
-		Math.max(0, Math.min(255, Math.round(v * (1 - amount)))).toString(16).padStart(2, "0");
+		Math.max(0, Math.min(255, Math.round(v * (1 - amount))))
+			.toString(16)
+			.padStart(2, "0");
 	return `#${c(n >> 16)}${c((n >> 8) & 255)}${c(n & 255)}`;
+}
+
+function faceLeft(rows: readonly string[]): string[] {
+	return rows.map((row) => [...row].reverse().join(""));
 }
 
 /**
@@ -69,6 +75,7 @@ function drawSprite(rows: string[], fills: Record<string, string>, groundY: numb
 /** `y` keeps the old meaning: the ground line is y + 3*S (bottom of the wheels). */
 export function renderCar(y: number, color: string, delaySec: number, rev = false): string {
 	const cls = rev ? "vehicle rev" : "vehicle";
+	const rows = rev ? faceLeft(CAR) : [...CAR];
 	const fills = {
 		b: color,
 		g: GLASS,
@@ -78,13 +85,14 @@ export function renderCar(y: number, color: string, delaySec: number, rev = fals
 	};
 	return (
 		`<g class="${cls}" style="animation-delay:${delaySec}s">` +
-		drawSprite(CAR, fills, y + S * 3) +
+		drawSprite(rows, fills, y + S * 3) +
 		`</g>`
 	);
 }
 
 export function renderBus(y: number, delaySec: number, rev = false): string {
 	const cls = rev ? "vehicle rev" : "vehicle";
+	const rows = rev ? faceLeft(BUS) : [...BUS];
 	const body = "#e6a817";
 	const fills = {
 		b: body,
@@ -97,7 +105,7 @@ export function renderBus(y: number, delaySec: number, rev = false): string {
 	};
 	return (
 		`<g class="${cls}" style="animation-delay:${delaySec}s">` +
-		drawSprite(BUS, fills, y + S * 3) +
+		drawSprite(rows, fills, y + S * 3) +
 		`</g>`
 	);
 }
