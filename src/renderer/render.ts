@@ -350,6 +350,5 @@ ${pedestrians.join("")}
 ${vehicles.join("")}
 ${emptyHint}
 ${buildingLabels}
-<text class="lbl" x="8" y="${height - 4}" font-size="9">@${user}${model.stale ? " · stale" : ""}</text>
 </svg>`;
 }
