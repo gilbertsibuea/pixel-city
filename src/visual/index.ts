@@ -17,5 +17,12 @@ export {
 } from "./languageLogos";
 export { renderTree, renderBush, renderFlower } from "./flora";
 export { renderCar, renderBus } from "./vehicles";
-export { pedestriansForStage, renderPedestrian } from "./pedestrians";
+export {
+	pedestriansForStage,
+	planPedestriansForBuilding,
+	planStreetWanderers,
+	pedestrianKeyframes,
+	renderPedestrian,
+} from "./pedestrians";
+export type { PedestrianPlan } from "./pedestrians";
 export { renderSkyDecor, renderSkyDefs, renderSkyBackground } from "./sky";

@@ -14,6 +14,9 @@ import {
 	renderSkyDefs,
 	renderTree,
 	pedestriansForStage,
+	planPedestriansForBuilding,
+	planStreetWanderers,
+	pedestrianKeyframes,
 	type BuildingSprite,
 } from "../visual";
 import { escapeCssColor, escapeXml } from "./escape";
@@ -224,18 +227,21 @@ export function renderCitySvg(model: CityModel): string {
 		vehicles.push(renderBus(laneY, -1.5 - i * 4.5, rev));
 	}
 
-	const pedestrians: string[] = [];
-	let pedIndex = 0;
-	for (const p of placed) {
-		const count = pedestriansForStage(p.building.buildingId);
-		for (let i = 0; i < count; i++) {
-			const px = p.x + 4 + i * 7;
-			pedestrians.push(
-				renderPedestrian(px, groundY, pedIndex, (pedIndex % 5) * 0.4),
-			);
-			pedIndex += 1;
-		}
-	}
+	const pedPlans = placed.flatMap((p, bi) => {
+		const doorXPx = p.x + p.sprite.doorX * SCALE;
+		return planPedestriansForBuilding({
+			buildingLeft: p.x,
+			buildingWidthPx: p.sprite.width * SCALE,
+			doorXPx,
+			groundY,
+			count: pedestriansForStage(p.building.buildingId),
+			idPrefix: `b${bi}`,
+			cityWidth: width,
+		});
+	});
+	const wanderCount = Math.min(6, Math.max(2, Math.floor(width / 90)));
+	pedPlans.push(...planStreetWanderers(width, groundY, wanderCount));
+	const pedestrians = pedPlans.map(renderPedestrian);
 
 	const emptyHint =
 		placed.length === 0
@@ -273,6 +279,7 @@ ${renderSkyDefs()}
 ${themeCss(model.theme)}
 ${visibilityCss}
 ${cityAnimationsCss(width + 80)}
+${pedestrianKeyframes(pedPlans)}
 text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
 ${renderSkyBackground(width, height)}

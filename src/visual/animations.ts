@@ -64,14 +64,6 @@ export function cityAnimationsCss(driveEndPx: number): string {
   0%, 100% { transform: scaleX(1); }
   50% { transform: scaleX(0.7); }
 }
-@keyframes walk {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(6px); }
-}
-@keyframes walk-long {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(28px); }
-}
 
 .sun { animation: sun-drift 24s steps(6) infinite; }
 .moon { animation: moon-drift 48s steps(12) infinite alternate; }
@@ -87,7 +79,6 @@ export function cityAnimationsCss(driveEndPx: number): string {
 .tree-top { animation: tree-sway 4s steps(4) infinite; transform-box: fill-box; transform-origin: bottom center; }
 .smoke { animation: smoke-rise 2.4s steps(4) infinite; }
 .flag { animation: flag-wave 1.2s steps(2) infinite; transform-box: fill-box; transform-origin: left center; }
-.pedestrian { animation: walk-long 6s steps(6) infinite alternate; }
 
 @media (prefers-reduced-motion: reduce) {
   .sun, .moon, .cloud, .cloud-alt, .bird, .star, .balloon, .win.on, .blink,
