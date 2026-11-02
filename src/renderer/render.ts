@@ -119,7 +119,8 @@ function renderSprite(
 
 	if (building.flag && sprite.flag) {
 		const fx = originX + Math.floor(sprite.width / 2) * SCALE;
-		const fy = originY - SCALE;
+		// Pole sits fully above the roof (4 grid tall), cloth at the top.
+		const fy = originY - 4 * SCALE;
 		parts.push(
 			`<rect x="${fx}" y="${fy}" width="${SCALE}" height="${SCALE * 4}" fill="#7a5434"/>` +
 				`<rect class="flag" x="${fx + SCALE}" y="${fy}" width="${SCALE * 3}" height="${SCALE * 2}" fill="#d94f4f"/>`,
