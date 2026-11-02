@@ -9,7 +9,13 @@ import { getCachedMetrics, putCachedMetrics } from "../cache/kv";
 import { normalizeUsername, svgCacheKey } from "../cache/keys";
 import { fetchCityMetrics, GitHubError } from "../github/client";
 import { renderCitySvg } from "../renderer/render";
-import { renderStagesPreviewSvg } from "../renderer/previewStages";
+import {
+	isBuildingId,
+	renderBuildingPreviewSvg,
+	renderEnvironmentPreviewSvg,
+	renderPreviewIndexHtml,
+	renderStagesPreviewSvg,
+} from "../renderer/previewGallery";
 import { renderFallbackSvg } from "../fallback/renderFallback";
 import { etagFor, svgResponse } from "./response";
 
@@ -60,12 +66,12 @@ export async function handleRequest(
 		});
 	}
 
-	if (url.pathname === "/" || url.pathname === "/health") {
+	if (url.pathname === "/health") {
 		return new Response(
 			JSON.stringify({
 				name: "Kota Pixel",
 				endpoint: "/v1/city/{username}.svg",
-				previewStages: "/v1/preview/stages.svg",
+				preview: "/preview",
 				ok: true,
 			}),
 			{ headers: { "Content-Type": "application/json" } },
@@ -76,9 +82,44 @@ export async function handleRequest(
 		return new Response("Method Not Allowed", { status: 405 });
 	}
 
+	if (url.pathname === "/" || url.pathname === "/preview") {
+		return new Response(renderPreviewIndexHtml(url.origin), {
+			headers: {
+				"Content-Type": "text/html; charset=utf-8",
+				"Cache-Control": "public, max-age=60",
+			},
+		});
+	}
+
 	if (url.pathname === "/v1/preview/stages.svg") {
 		const svg = renderStagesPreviewSvg(url.searchParams.get("theme"));
 		return svgResponse(svg, { cacheSeconds: 60 });
+	}
+
+	if (url.pathname === "/v1/preview/environment.svg") {
+		const svg = renderEnvironmentPreviewSvg(url.searchParams.get("theme"));
+		return svgResponse(svg, { cacheSeconds: 60 });
+	}
+
+	const buildingMatch = url.pathname.match(
+		/^\/v1\/preview\/building\/([a-z0-9-]+)\.svg$/i,
+	);
+	if (buildingMatch) {
+		const id = buildingMatch[1]!;
+		if (!isBuildingId(id)) {
+			return svgResponse(
+				renderFallbackSvg({
+					title: "Building tidak ditemukan",
+					message: `id: ${id}`,
+					status: 404,
+				}),
+				{ status: 404, cacheSeconds: 60 },
+			);
+		}
+		return svgResponse(
+			renderBuildingPreviewSvg(id, url.searchParams.get("theme")),
+			{ cacheSeconds: 60 },
+		);
 	}
 
 	const rawUser = parseCityPath(url.pathname);

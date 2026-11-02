@@ -33,9 +33,11 @@ npm run dev
 
 Open:
 
+- `http://localhost:8787/preview` — gallery: tiap building + lingkungan
+- `http://localhost:8787/v1/preview/building/hut.svg` — satu stage (hut, wood-house, stone-shop, midrise, skyscraper)
+- `http://localhost:8787/v1/preview/environment.svg` — langit, jalan, pohon, mobil, efek, palette
+- `http://localhost:8787/v1/preview/stages.svg` — semua stage dalam satu kota
 - `http://localhost:8787/v1/city/octocat.svg` — kota dari data GitHub
-- `http://localhost:8787/v1/preview/stages.svg` — semua stage bangunan (gubuk → pencakar langit)
-- `http://localhost:8787/v1/preview/stages.svg?theme=dark` — sama, tema gelap
 
 ```bash
 npm test
