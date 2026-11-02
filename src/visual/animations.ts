@@ -82,7 +82,8 @@ export function cityAnimationsCss(driveEndPx: number): string {
 
 @media (prefers-reduced-motion: reduce) {
   .sun, .moon, .cloud, .cloud-alt, .bird, .star, .balloon, .win.on, .blink,
-  .vehicle, .tree-top, .smoke, .flag, .pedestrian { animation: none !important; }
+  .vehicle, .tree-top, .smoke, .flag, .pedestrian,
+  .builder-hammer .builder-arm, .builder-carry, .builder-spark, .hook { animation: none !important; }
 }
 `;
 }

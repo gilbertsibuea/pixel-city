@@ -32,6 +32,11 @@ export interface CityBuilding {
 	litRatio: number;
 	smoke: boolean;
 	flag: boolean;
+	/**
+	 * When set, render the NEXT stage (`target`) under construction instead of
+	 * the finished `buildingId` sprite. Windows stay unlit.
+	 */
+	construction?: { target: BuildingId; phase: 0 | 1 | 2 };
 }
 
 export interface CityModel {

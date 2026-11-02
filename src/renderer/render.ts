@@ -1,11 +1,16 @@
 import type { CityBuilding, CityModel } from "../core/types";
 import {
 	BUILDING_BY_ID,
+	builderAnimationsCss,
 	cityAnimationsCss,
+	constructionForTarget,
 	PALETTE,
+	planBuilders,
+	renderBuilder,
 	renderBush,
 	renderBus,
 	renderCar,
+	renderCraneHook,
 	renderFlower,
 	renderLanguageLogoCentered,
 	renderPedestrian,
@@ -18,6 +23,7 @@ import {
 	planStreetWanderers,
 	pedestrianKeyframes,
 	type BuildingSprite,
+	type ConstructionMeta,
 } from "../visual";
 import { escapeCssColor, escapeXml } from "./escape";
 import { hashString } from "./hash";
@@ -45,6 +51,30 @@ interface PlacedBuilding {
 	sprite: BuildingSprite;
 	x: number;
 	y: number;
+	construction: ConstructionMeta | null;
+}
+
+function visualForBuilding(building: CityBuilding): {
+	sprite: BuildingSprite;
+	construction: ConstructionMeta | null;
+} {
+	if (!building.construction) {
+		return { sprite: BUILDING_BY_ID[building.buildingId], construction: null };
+	}
+	const meta = constructionForTarget(
+		building.construction.target,
+		building.construction.phase,
+	);
+	const finished = BUILDING_BY_ID[building.construction.target];
+	const sprite: BuildingSprite = {
+		id: finished.id,
+		name: finished.name,
+		rows: meta.rows,
+		width: meta.width,
+		height: meta.height,
+		doorX: meta.doorX,
+	};
+	return { sprite, construction: meta };
 }
 
 function themeCss(theme: CityModel["theme"]): string {
@@ -74,36 +104,52 @@ function renderSprite(
 	originX: number,
 	originY: number,
 	seed: string,
+	construction: ConstructionMeta | null,
 ): string {
 	const parts: string[] = [];
 	const windowCells: Array<{ x: number; y: number }> = [];
+	const underConstruction = construction !== null;
 
+	// Horizontal run-length merge for solid palette cells (keeps SVG small).
 	for (let row = 0; row < sprite.rows.length; row++) {
 		const line = sprite.rows[row]!;
-		for (let col = 0; col < line.length; col++) {
+		let col = 0;
+		while (col < line.length) {
 			const ch = line[col]!;
-			if (ch === ".") continue;
+			if (ch === ".") {
+				col++;
+				continue;
+			}
 			const x = originX + col * SCALE;
 			const y = originY + row * SCALE;
 			if (ch === "w") {
 				windowCells.push({ x, y });
+				col++;
 				continue;
 			}
 			if (ch === "A") {
 				parts.push(
 					`<rect class="blink" x="${x}" y="${y}" width="${SCALE}" height="${SCALE}" fill="#ffd84a"/>`,
 				);
+				col++;
 				continue;
 			}
 			const color = PALETTE[ch];
-			if (!color) continue;
+			if (!color) {
+				col++;
+				continue;
+			}
+			let run = 1;
+			while (col + run < line.length && line[col + run] === ch) run++;
 			parts.push(
-				`<rect x="${x}" y="${y}" width="${SCALE}" height="${SCALE}" fill="${color}"/>`,
+				`<rect x="${x}" y="${y}" width="${run * SCALE}" height="${SCALE}" fill="${color}"/>`,
 			);
+			col += run;
 		}
 	}
 
-	const litCount = Math.round(windowCells.length * building.litRatio);
+	const litRatio = underConstruction ? 0 : building.litRatio;
+	const litCount = Math.round(windowCells.length * litRatio);
 	const order = windowCells
 		.map((cell, i) => ({ cell, rank: hashString(`${seed}:${i}`) }))
 		.sort((a, b) => a.rank - b.rank);
@@ -119,7 +165,7 @@ function renderSprite(
 		);
 	}
 
-	if (building.smoke && sprite.smokeX !== undefined) {
+	if (!underConstruction && building.smoke && sprite.smokeX !== undefined) {
 		const sx = originX + sprite.smokeX * SCALE;
 		const sy = originY - 2 * SCALE;
 		parts.push(
@@ -130,7 +176,7 @@ function renderSprite(
 		);
 	}
 
-	if (building.flag && sprite.flag) {
+	if (!underConstruction && building.flag && sprite.flag) {
 		const fx = originX + Math.floor(sprite.width / 2) * SCALE;
 		// Pole sits fully above the roof (4 grid tall), cloth at the top.
 		const fy = originY - 4 * SCALE;
@@ -140,21 +186,18 @@ function renderSprite(
 		);
 	}
 
-	// Pixel language logo only on taller buildings — centered on the facade.
+	// Pixel language logo only on taller finished buildings — centered on the facade.
+	const displayId = underConstruction
+		? building.construction!.target
+		: building.buildingId;
 	const canShowLogo =
-		building.buildingId === "midrise" ||
-		building.buildingId === "skyscraper" ||
-		building.buildingId === "landmark";
+		!underConstruction &&
+		(displayId === "midrise" || displayId === "skyscraper" || displayId === "landmark");
 	if (canShowLogo) {
 		const logoPixel = 2;
 		const centerX = originX + (sprite.width * SCALE) / 2;
-		// Sit on upper body (landmark: a bit lower so it rests on a wider tier).
 		const yRatio =
-			building.buildingId === "landmark"
-				? 0.3
-				: building.buildingId === "skyscraper"
-					? 0.16
-					: 0.14;
+			displayId === "landmark" ? 0.3 : displayId === "skyscraper" ? 0.16 : 0.14;
 		const topY = originY + sprite.height * SCALE * yRatio;
 		const logo = renderLanguageLogoCentered(
 			building.primaryLanguage,
@@ -163,6 +206,32 @@ function renderSprite(
 			logoPixel,
 		);
 		if (logo) parts.push(logo);
+	}
+
+	if (construction?.craneHook) {
+		parts.push(
+			renderCraneHook(
+				originX,
+				originY,
+				construction.craneHook.col,
+				construction.craneHook.row,
+				SCALE,
+			),
+		);
+	}
+
+	if (construction && building.construction) {
+		const builders = planBuilders({
+			target: building.construction.target,
+			seed,
+			originX,
+			groundY: originY + sprite.height * SCALE,
+			spriteWidthPx: sprite.width * SCALE,
+			scale: SCALE,
+			scaffoldRows: construction.scaffoldRows,
+			spriteTopY: originY,
+		});
+		for (const b of builders) parts.push(renderBuilder(b));
 	}
 
 	parts.push(`<title>${escapeXml(building.repoName)}</title>`);
@@ -176,10 +245,8 @@ function placeBuildings(model: CityModel): {
 	groundY: number;
 	roadY: number;
 } {
-	const maxH = model.buildings.reduce((m, b) => {
-		const s = BUILDING_BY_ID[b.buildingId];
-		return Math.max(m, s.height);
-	}, 8);
+	const visuals = model.buildings.map((b) => visualForBuilding(b));
+	const maxH = visuals.reduce((m, v) => Math.max(m, v.sprite.height), 8);
 
 	const labelExtra = model.showBuildingLabels ? 28 : 0;
 	const buildingH = maxH * SCALE;
@@ -193,10 +260,11 @@ function placeBuildings(model: CityModel): {
 	let x = PADDING_X;
 	const placed: PlacedBuilding[] = [];
 	const gap = model.showBuildingLabels ? Math.max(GAP, 18) : GAP;
-	for (const building of model.buildings) {
-		const sprite = BUILDING_BY_ID[building.buildingId];
+	for (let i = 0; i < model.buildings.length; i++) {
+		const building = model.buildings[i]!;
+		const { sprite, construction } = visuals[i]!;
 		const y = groundY - sprite.height * SCALE;
-		placed.push({ building, sprite, x, y });
+		placed.push({ building, sprite, x, y, construction });
 		x += sprite.width * SCALE + gap;
 	}
 
@@ -234,6 +302,7 @@ export function renderCitySvg(model: CityModel): string {
 				p.x,
 				p.y,
 				`${model.username}/${p.building.repoName}`,
+				p.construction,
 			),
 		)
 		.join("");
@@ -282,12 +351,13 @@ export function renderCitySvg(model: CityModel): string {
 
 	const pedPlans = placed.flatMap((p, bi) => {
 		const doorXPx = p.x + p.sprite.doorX * SCALE;
+		const stageId = p.building.construction?.target ?? p.building.buildingId;
 		return planPedestriansForBuilding({
 			buildingLeft: p.x,
 			buildingWidthPx: p.sprite.width * SCALE,
 			doorXPx,
 			groundY,
-			count: pedestriansForStage(p.building.buildingId),
+			count: pedestriansForStage(stageId),
 			idPrefix: `b${bi}`,
 			cityWidth: width,
 		});
@@ -332,6 +402,7 @@ ${renderSkyDefs()}
 ${themeCss(model.theme)}
 ${visibilityCss}
 ${cityAnimationsCss(width + 80)}
+${builderAnimationsCss()}
 ${pedestrianKeyframes(pedPlans)}
 text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>

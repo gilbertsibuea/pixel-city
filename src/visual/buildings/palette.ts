@@ -21,6 +21,13 @@ export const PALETTE: Readonly<Record<string, string>> = {
   e: "#d94f4f", // car body
   n: "#222222", // car wheels
   f: "#f4f0cf", // moon
+  // Construction / builders
+  P: "#d0b06a", // scaffold boards
+  Q: "#6b6f78", // steel beam / rebar
+  X: "#f08a24", // crane orange
+  H: "#ffd23f", // hard hat
+  V: "#ff6a1a", // hi-vis vest
+  F: "#e0b48a", // builder skin
 };
 
 /** Window colors when a repo has no known primary language. */

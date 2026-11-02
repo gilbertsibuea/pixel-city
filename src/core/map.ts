@@ -7,6 +7,7 @@ import {
 	STREAK_ACTIVE_DAYS,
 	WINDOW_FULL_LIT_COMMITS,
 	buildingIdForCommits,
+	constructionPhase,
 	type ThemeMode,
 } from "./config";
 import type { CityBuilding, CityMetrics, CityModel, RepositoryMetric } from "./types";
@@ -84,14 +85,16 @@ export function mapMetricsToCity(
 	for (const repo of selected) {
 		const buildingId = buildingIdForCommits(repo.commits12m);
 		if (!buildingId) continue;
+		const construction = constructionPhase(repo.commits12m) ?? undefined;
 		buildings.push({
 			repoName: repo.name,
 			buildingId,
 			languageColor: repo.languageColor ?? LANGUAGE_FALLBACK_COLOR,
 			primaryLanguage: repo.primaryLanguage,
-			litRatio: litRatioForCommits(repo.commits30d),
-			smoke: streakActive,
-			flag: streakActive,
+			litRatio: construction ? 0 : litRatioForCommits(repo.commits30d),
+			smoke: construction ? false : streakActive,
+			flag: construction ? false : streakActive,
+			construction,
 		});
 	}
 
