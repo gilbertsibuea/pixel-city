@@ -18,4 +18,4 @@ export {
 export { renderTree, renderBush, renderFlower } from "./flora";
 export { renderCar, renderBus } from "./vehicles";
 export { pedestriansForStage, renderPedestrian } from "./pedestrians";
-export { renderSkyDecor } from "./sky";
+export { renderSkyDecor, renderSkyDefs, renderSkyBackground } from "./sky";

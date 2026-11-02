@@ -9,7 +9,9 @@ import {
 	renderFlower,
 	renderLanguageLogoSvg,
 	renderPedestrian,
+	renderSkyBackground,
 	renderSkyDecor,
+	renderSkyDefs,
 	renderTree,
 	pedestriansForStage,
 	type BuildingSprite,
@@ -34,14 +36,12 @@ interface PlacedBuilding {
 
 function themeCss(theme: CityModel["theme"]): string {
 	const light = `
-.sky { fill: #87b8e8; }
 .ground { fill: #5a8f45; }
 .road { fill: #4a4a52; }
 .road-line { fill: #d4d4d8; }
 .lbl { fill: #1f2933; }
 `;
 	const dark = `
-.sky { fill: #1a2233; }
 .ground { fill: #2f4a2a; }
 .road { fill: #2a2a32; }
 .road-line { fill: #6a6a72; }
@@ -263,13 +263,14 @@ export function renderCitySvg(model: CityModel): string {
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">
 <title>Kota Pixel — ${user}</title>
 <desc>Pixel city of public GitHub activity for ${user}${staleNote}. Buildings represent repositories; window lights show recent commits.</desc>
+${renderSkyDefs()}
 <style>
 ${themeCss(model.theme)}
 ${visibilityCss}
 ${cityAnimationsCss(width + 80)}
 text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
-<rect class="sky" width="${width}" height="${height}"/>
+${renderSkyBackground(width, height)}
 ${renderSkyDecor({ width, theme: model.theme })}
 <rect class="ground" x="0" y="${groundY}" width="${width}" height="${GROUND_H}"/>
 <rect class="road" x="0" y="${roadY}" width="${width}" height="${ROAD_H}"/>

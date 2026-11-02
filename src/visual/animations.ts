@@ -5,6 +5,12 @@ export function cityAnimationsCss(driveEndPx: number): string {
   0%, 100% { transform: translate(0px, 0px); }
   50% { transform: translate(22px, 6px); }
 }
+/* Westward drift (to the left), like the real sky. */
+@keyframes moon-drift {
+  0% { transform: translate(0px, 0px); }
+  50% { transform: translate(-36px, 4px); }
+  100% { transform: translate(-72px, 10px); }
+}
 @keyframes cloud-drift {
   0% { transform: translateX(0); }
   100% { transform: translateX(40px); }
@@ -67,7 +73,8 @@ export function cityAnimationsCss(driveEndPx: number): string {
   100% { transform: translateX(28px); }
 }
 
-.sun { animation: sun-drift 24s steps(6) infinite; transform-box: fill-box; transform-origin: center; }
+.sun { animation: sun-drift 24s steps(6) infinite; }
+.moon { animation: moon-drift 48s steps(12) infinite alternate; }
 .cloud { animation: cloud-drift 36s steps(12) infinite alternate; }
 .cloud-alt { animation: cloud-drift-slow 42s steps(14) infinite alternate; }
 .bird { animation: bird-fly 16s steps(16) infinite; }
@@ -83,7 +90,7 @@ export function cityAnimationsCss(driveEndPx: number): string {
 .pedestrian { animation: walk-long 6s steps(6) infinite alternate; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sun, .cloud, .cloud-alt, .bird, .star, .balloon, .win.on, .blink,
+  .sun, .moon, .cloud, .cloud-alt, .bird, .star, .balloon, .win.on, .blink,
   .vehicle, .tree-top, .smoke, .flag, .pedestrian { animation: none !important; }
 }
 `;
