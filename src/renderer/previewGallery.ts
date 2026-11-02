@@ -5,6 +5,7 @@ import {
 	CITY_ANIMATIONS_CSS,
 	COMMON_LANGUAGE_LOGO_IDS,
 	PALETTE,
+	renderLanguageLogoCentered,
 	renderLanguageLogoSvg,
 	type BuildingId,
 	type BuildingSprite,
@@ -154,10 +155,13 @@ ${renderGridSprite(sprite, ox, oy, {
 	flag: true,
 	seed: `preview/${id}`,
 })}
-${renderLanguageLogoSvg(
+${renderLanguageLogoCentered(
 	PREVIEW_LANG[id] ?? null,
-	ox + Math.max(2, Math.floor(sprite.width / 2) - 2) * SCALE,
-	oy + Math.max(2, Math.floor(sprite.height * 0.18)) * SCALE,
+	ox + (sprite.width * SCALE) / 2,
+	oy +
+		sprite.height *
+			SCALE *
+			(id === "burj-khalifa" ? 0.3 : id === "skyscraper" ? 0.16 : 0.14),
 	2,
 )}
 <text class="lbl" x="${pad}" y="${height - metaH + 8}" font-size="14">${escapeXml(sprite.name)}</text>

@@ -143,6 +143,17 @@ export function getLanguageLogo(name: string | null | undefined): LanguageLogo |
 	return LOGOS[key] ?? null;
 }
 
+export function measureLanguageLogo(
+	name: string | null | undefined,
+	pixel = 2,
+): { width: number; height: number } | null {
+	const logo = getLanguageLogo(name);
+	if (!logo || logo.rows.length === 0) return null;
+	const cols = Math.max(...logo.rows.map((r) => r.length));
+	return { width: cols * pixel, height: logo.rows.length * pixel };
+}
+
+/** Draw logo with top-left at (x, y). */
 export function renderLanguageLogoSvg(
 	name: string | null | undefined,
 	x: number,
@@ -163,7 +174,19 @@ export function renderLanguageLogoSvg(
 			);
 		}
 	}
-	return `<g class="lang-logo" transform="translate(0,0)">${parts.join("")}</g>`;
+	return `<g class="lang-logo">${parts.join("")}</g>`;
+}
+
+/** Draw logo centered on `centerX`, top edge at `topY`. */
+export function renderLanguageLogoCentered(
+	name: string | null | undefined,
+	centerX: number,
+	topY: number,
+	pixel = 2,
+): string {
+	const size = measureLanguageLogo(name, pixel);
+	if (!size) return "";
+	return renderLanguageLogoSvg(name, centerX - size.width / 2, topY, pixel);
 }
 
 export const COMMON_LANGUAGE_LOGO_IDS = Object.keys(LOGOS);

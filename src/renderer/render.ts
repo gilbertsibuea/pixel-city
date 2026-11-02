@@ -7,7 +7,7 @@ import {
 	renderBus,
 	renderCar,
 	renderFlower,
-	renderLanguageLogoSvg,
+	renderLanguageLogoCentered,
 	renderPedestrian,
 	renderSkyBackground,
 	renderSkyDecor,
@@ -131,17 +131,27 @@ function renderSprite(
 		);
 	}
 
-	// Pixel language logo only on taller buildings (midrise / skyscraper).
+	// Pixel language logo only on taller buildings — centered on the facade.
 	const canShowLogo =
 		building.buildingId === "midrise" ||
 		building.buildingId === "skyscraper" ||
 		building.buildingId === "burj-khalifa";
 	if (canShowLogo) {
-		const logo = renderLanguageLogoSvg(
+		const logoPixel = 2;
+		const centerX = originX + (sprite.width * SCALE) / 2;
+		// Sit on upper body (Burj: a bit lower so it rests on a wider tier).
+		const yRatio =
+			building.buildingId === "burj-khalifa"
+				? 0.3
+				: building.buildingId === "skyscraper"
+					? 0.16
+					: 0.14;
+		const topY = originY + sprite.height * SCALE * yRatio;
+		const logo = renderLanguageLogoCentered(
 			building.primaryLanguage,
-			originX + Math.max(2, Math.floor(sprite.width / 2) - 2) * SCALE,
-			originY + Math.max(2, Math.floor(sprite.height * 0.18)) * SCALE,
-			2,
+			centerX,
+			topY,
+			logoPixel,
 		);
 		if (logo) parts.push(logo);
 	}

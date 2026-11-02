@@ -13,7 +13,9 @@ export { PALETTE, LANGUAGE_FALLBACK_COLOR } from "./buildings/palette";
 export { CITY_ANIMATIONS_CSS, cityAnimationsCss } from "./animations";
 export {
 	getLanguageLogo,
+	measureLanguageLogo,
 	renderLanguageLogoSvg,
+	renderLanguageLogoCentered,
 	COMMON_LANGUAGE_LOGO_IDS,
 } from "./languageLogos";
 export { renderTree, renderBush, renderFlower } from "./flora";
