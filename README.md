@@ -31,7 +31,11 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:8787/v1/city/octocat.svg`.
+Open:
+
+- `http://localhost:8787/v1/city/octocat.svg` — kota dari data GitHub
+- `http://localhost:8787/v1/preview/stages.svg` — semua stage bangunan (gubuk → pencakar langit)
+- `http://localhost:8787/v1/preview/stages.svg?theme=dark` — sama, tema gelap
 
 ```bash
 npm test

@@ -41,6 +41,8 @@ export interface CityModel {
 	streakActive: boolean;
 	generatedAt: string;
 	stale?: boolean;
+	/** When true, draw repo/stage captions under each building (preview). */
+	showBuildingLabels?: boolean;
 }
 
 export type FetchMetricsResult =

@@ -9,6 +9,7 @@ import { getCachedMetrics, putCachedMetrics } from "../cache/kv";
 import { normalizeUsername, svgCacheKey } from "../cache/keys";
 import { fetchCityMetrics, GitHubError } from "../github/client";
 import { renderCitySvg } from "../renderer/render";
+import { renderStagesPreviewSvg } from "../renderer/previewStages";
 import { renderFallbackSvg } from "../fallback/renderFallback";
 import { etagFor, svgResponse } from "./response";
 
@@ -64,6 +65,7 @@ export async function handleRequest(
 			JSON.stringify({
 				name: "Kota Pixel",
 				endpoint: "/v1/city/{username}.svg",
+				previewStages: "/v1/preview/stages.svg",
 				ok: true,
 			}),
 			{ headers: { "Content-Type": "application/json" } },
@@ -72,6 +74,11 @@ export async function handleRequest(
 
 	if (request.method !== "GET" && request.method !== "HEAD") {
 		return new Response("Method Not Allowed", { status: 405 });
+	}
+
+	if (url.pathname === "/v1/preview/stages.svg") {
+		const svg = renderStagesPreviewSvg(url.searchParams.get("theme"));
+		return svgResponse(svg, { cacheSeconds: 60 });
 	}
 
 	const rawUser = parseCityPath(url.pathname);

@@ -161,18 +161,20 @@ function placeBuildings(model: CityModel): {
 		return Math.max(m, s.height);
 	}, 8);
 
+	const labelExtra = model.showBuildingLabels ? 28 : 0;
 	const contentH = maxH * SCALE;
 	const groundY = PADDING_TOP + contentH;
 	const roadY = groundY + GROUND_H;
-	const height = roadY + ROAD_H + 12;
+	const height = roadY + ROAD_H + 12 + labelExtra;
 
 	let x = PADDING_X;
 	const placed: PlacedBuilding[] = [];
+	const gap = model.showBuildingLabels ? Math.max(GAP, 18) : GAP;
 	for (const building of model.buildings) {
 		const sprite = BUILDING_BY_ID[building.buildingId];
 		const y = groundY - sprite.height * SCALE;
 		placed.push({ building, sprite, x, y });
-		x += sprite.width * SCALE + GAP;
+		x += sprite.width * SCALE + gap;
 	}
 
 	const width = Math.max(VIEW_MIN_W, x + PADDING_X + 40);
@@ -236,6 +238,16 @@ export function renderCitySvg(model: CityModel): string {
 			? `<text class="lbl" x="${width / 2}" y="${groundY - 20}" text-anchor="middle" font-family="monospace" font-size="10">Belum ada bangunan publik</text>`
 			: "";
 
+	const buildingLabels = model.showBuildingLabels
+		? placed
+				.map((p) => {
+					const cx = p.x + (p.sprite.width * SCALE) / 2;
+					const label = escapeXml(p.building.repoName);
+					return `<text class="lbl" x="${cx}" y="${roadY + ROAD_H + 14}" text-anchor="middle" font-size="9">${label}</text>`;
+				})
+				.join("")
+		: "";
+
 	const visibilityCss =
 		model.theme === "auto"
 			? `
@@ -270,6 +282,7 @@ ${treeParts.join("")}
 ${buildingsSvg}
 ${cars}
 ${emptyHint}
+${buildingLabels}
 <text class="lbl" x="8" y="${height - 4}" font-size="9">@${user}${model.stale ? " · stale" : ""}</text>
 </svg>`;
 }
