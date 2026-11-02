@@ -16,6 +16,7 @@ import { renderStagesPreviewSvg } from "./previewStages";
 const PREVIEW_LANG: Partial<Record<BuildingId, string>> = {
 	midrise: "TypeScript",
 	skyscraper: "Rust",
+	"burj-khalifa": "Go",
 };
 
 const SCALE = 4;
@@ -24,7 +25,8 @@ const STAGE_LABEL: Record<BuildingId, string> = {
 	"wood-house": "20–99 commits",
 	"stone-shop": "100–299 commits",
 	midrise: "300–799 commits",
-	skyscraper: "800+ commits",
+	skyscraper: "800–999 commits",
+	"burj-khalifa": "1000+ commits",
 };
 
 const BUILDING_IDS = new Set(BUILDINGS.map((b) => b.id));

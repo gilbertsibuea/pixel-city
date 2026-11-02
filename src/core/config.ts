@@ -1,6 +1,6 @@
 import type { BuildingId } from "../visual";
 
-export const RENDERER_VERSION = "v2";
+export const RENDERER_VERSION = "v3";
 
 export const DEFAULT_BUILDING_LIMIT = 18;
 export const MAX_BUILDING_LIMIT = 18;
@@ -27,6 +27,7 @@ export type ThemeMode = "auto" | "light" | "dark";
 
 /** Commit contribution thresholds -> building stage (12-month window). */
 export const BUILDING_STAGES: ReadonlyArray<{ min: number; id: BuildingId }> = [
+	{ min: 1000, id: "burj-khalifa" },
 	{ min: 800, id: "skyscraper" },
 	{ min: 300, id: "midrise" },
 	{ min: 100, id: "stone-shop" },

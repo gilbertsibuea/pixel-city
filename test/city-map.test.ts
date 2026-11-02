@@ -34,6 +34,8 @@ describe("building stages", () => {
 		expect(buildingIdForCommits(100)).toBe("stone-shop");
 		expect(buildingIdForCommits(300)).toBe("midrise");
 		expect(buildingIdForCommits(800)).toBe("skyscraper");
+		expect(buildingIdForCommits(999)).toBe("skyscraper");
+		expect(buildingIdForCommits(1000)).toBe("burj-khalifa");
 	});
 });
 

@@ -24,7 +24,8 @@ import { hashString } from "./hash";
 
 const SCALE = 3;
 const PADDING_X = 16;
-const PADDING_TOP = 40;
+/** Keep small so tall peaks sit inside the cloud band (not below an empty sky). */
+const PADDING_TOP = 8;
 const GROUND_H = 22;
 const ROAD_H = 14;
 const GAP = 8;
@@ -132,7 +133,9 @@ function renderSprite(
 
 	// Pixel language logo only on taller buildings (midrise / skyscraper).
 	const canShowLogo =
-		building.buildingId === "midrise" || building.buildingId === "skyscraper";
+		building.buildingId === "midrise" ||
+		building.buildingId === "skyscraper" ||
+		building.buildingId === "burj-khalifa";
 	if (canShowLogo) {
 		const logo = renderLanguageLogoSvg(
 			building.primaryLanguage,
@@ -283,7 +286,12 @@ ${pedestrianKeyframes(pedPlans)}
 text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
 ${renderSkyBackground(width, height)}
-${renderSkyDecor({ width, theme: model.theme })}
+${renderSkyDecor({
+	width,
+	theme: model.theme,
+	peakY: placed.length ? Math.min(...placed.map((p) => p.y)) : PADDING_TOP,
+	layer: "back",
+})}
 <rect class="ground" x="0" y="${groundY}" width="${width}" height="${GROUND_H}"/>
 <rect class="road" x="0" y="${roadY}" width="${width}" height="${ROAD_H}"/>
 ${Array.from({ length: Math.ceil(width / 24) }, (_, i) =>
@@ -291,6 +299,12 @@ ${Array.from({ length: Math.ceil(width / 24) }, (_, i) =>
 ).join("")}
 ${flora.join("")}
 ${buildingsSvg}
+${renderSkyDecor({
+	width,
+	theme: model.theme,
+	peakY: placed.length ? Math.min(...placed.map((p) => p.y)) : PADDING_TOP,
+	layer: "front",
+})}
 ${pedestrians.join("")}
 ${vehicles.join("")}
 ${emptyHint}

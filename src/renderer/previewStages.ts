@@ -31,10 +31,16 @@ export function stagesPreviewModel(theme: ThemeMode = "light"): CityModel {
 			primaryLanguage: "TypeScript",
 		},
 		{
-			repoName: "Pencakar langit (800+)",
+			repoName: "Pencakar langit (800–999)",
 			buildingId: "skyscraper" as const,
 			languageColor: "#dea584",
 			primaryLanguage: "Rust",
+		},
+		{
+			repoName: "Burj Khalifa (1000+)",
+			buildingId: "burj-khalifa" as const,
+			languageColor: "#00add8",
+			primaryLanguage: "Go",
 		},
 	];
 

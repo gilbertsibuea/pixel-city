@@ -6,7 +6,13 @@
  *   'd'  door    -> entrance (pedestrians walk toward this)
  *   any other key of PALETTE -> solid color
  */
-export type BuildingId = "hut" | "wood-house" | "stone-shop" | "midrise" | "skyscraper";
+export type BuildingId =
+	| "hut"
+	| "wood-house"
+	| "stone-shop"
+	| "midrise"
+	| "skyscraper"
+	| "burj-khalifa";
 
 export interface BuildingSprite {
 	id: BuildingId;
