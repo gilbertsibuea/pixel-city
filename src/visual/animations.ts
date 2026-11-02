@@ -7,11 +7,11 @@ export function cityAnimationsCss(driveEndPx: number): string {
 }
 @keyframes cloud-drift {
   0% { transform: translateX(0); }
-  100% { transform: translateX(48px); }
+  100% { transform: translateX(40px); }
 }
 @keyframes cloud-drift-slow {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-36px); }
+  100% { transform: translateX(-32px); }
 }
 @keyframes bird-fly {
   0% { transform: translate(0px, 0px); }
@@ -22,9 +22,11 @@ export function cityAnimationsCss(driveEndPx: number): string {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.15; }
 }
-@keyframes balloon-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+/* Float from spawn toward upper-left so balloons stay readable in the sky. */
+@keyframes balloon-float {
+  0% { transform: translate(0px, 0px); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(-72px, -36px); opacity: 0.35; }
 }
 @keyframes win-flicker {
   0%, 100% { opacity: 1; }
@@ -70,7 +72,7 @@ export function cityAnimationsCss(driveEndPx: number): string {
 .cloud-alt { animation: cloud-drift-slow 42s steps(14) infinite alternate; }
 .bird { animation: bird-fly 16s steps(16) infinite; }
 .star { animation: star-twinkle 2.4s steps(2) infinite; }
-.balloon { animation: balloon-bob 5s steps(4) infinite; transform-box: fill-box; transform-origin: center; }
+.balloon { animation: balloon-float 10s steps(10) infinite; }
 .win.on { animation: win-flicker 3.2s steps(2) infinite; }
 .blink { animation: blink 1.6s steps(2) infinite; }
 .vehicle { animation: vehicle-drive 16s steps(32) infinite; }
