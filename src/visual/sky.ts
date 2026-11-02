@@ -162,8 +162,11 @@ export function renderSkyDecor(options: SkyDecorOptions): string {
 	/** Leave room above grass so clouds never sit on the road. */
 	const maxY = Math.max(20, groundY - 28);
 
+	/** Always near the top of the sky — never tied to short building peaks. */
+	const celestialY = clampSkyY(10, Math.min(18, Math.max(10, Math.floor(maxY * 0.08))));
+
 	const sun =
-		`<g transform="translate(26,${clampSkyY(Math.max(2, py - 4), maxY - 20)})">` +
+		`<g transform="translate(26,${celestialY})">` +
 		`<g class="sun">` +
 		`<circle cx="10" cy="10" r="10" fill="${PALETTE.y}"/>` +
 		`<rect x="8" y="-8" width="4" height="4" fill="${PALETTE.y}" opacity="0.7"/>` +
@@ -174,7 +177,7 @@ export function renderSkyDecor(options: SkyDecorOptions): string {
 
 	const moonX = Math.max(80, width - 56);
 	const moon =
-		`<g transform="translate(${moonX},${clampSkyY(Math.max(2, py - 2), maxY - 20)})">` +
+		`<g transform="translate(${moonX},${celestialY})">` +
 		`<g class="moon">` +
 		`<circle cx="10" cy="10" r="10" fill="${PALETTE.f}"/>` +
 		`<circle cx="16" cy="6" r="8" fill="#0d1428"/>` +

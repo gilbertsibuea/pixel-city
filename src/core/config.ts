@@ -1,6 +1,6 @@
 import type { BuildingId } from "../visual";
 
-export const RENDERER_VERSION = "v7";
+export const RENDERER_VERSION = "v8";
 
 export const DEFAULT_BUILDING_LIMIT = 18;
 export const MAX_BUILDING_LIMIT = 18;

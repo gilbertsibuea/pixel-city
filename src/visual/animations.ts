@@ -5,11 +5,11 @@ export function cityAnimationsCss(driveEndPx: number): string {
   0%, 100% { transform: translate(0px, 0px); }
   50% { transform: translate(22px, 6px); }
 }
-/* Westward drift (to the left), like the real sky. */
+/* Westward drift (to the left), stay high in the sky. */
 @keyframes moon-drift {
   0% { transform: translate(0px, 0px); }
-  50% { transform: translate(-36px, 4px); }
-  100% { transform: translate(-72px, 10px); }
+  50% { transform: translate(-36px, 2px); }
+  100% { transform: translate(-72px, 4px); }
 }
 @keyframes cloud-drift {
   0% { transform: translateX(0); }
