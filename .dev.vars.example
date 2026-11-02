@@ -1,0 +1,3 @@
+# Fine-grained GitHub PAT with public repository read access.
+# Copy to .dev.vars for local `wrangler dev` (never commit .dev.vars).
+GITHUB_TOKEN=github_pat_xxxxxxxx
