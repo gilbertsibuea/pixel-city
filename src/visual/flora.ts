@@ -1,6 +1,6 @@
 import { PALETTE } from "./buildings/palette";
 
-const S = 3;
+const S = 4;
 
 /**
  * Trees are drawn so foliage sits flush on / slightly overlapping the trunk.

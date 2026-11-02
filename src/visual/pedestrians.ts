@@ -1,6 +1,6 @@
 import type { BuildingId } from "./buildings/types";
 
-const S = 3;
+const S = 4;
 
 /** Pedestrians spawned near a building, based on its stage. */
 export function pedestriansForStage(stage: BuildingId): number {

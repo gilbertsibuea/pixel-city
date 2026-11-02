@@ -22,14 +22,23 @@ import {
 import { escapeCssColor, escapeXml } from "./escape";
 import { hashString } from "./hash";
 
-const SCALE = 3;
+/** Match preview gallery pixel size so stage art doesn't look bigger than live cities. */
+const SCALE = 4;
 const PADDING_X = 16;
 /** Keep small so tall peaks sit inside the cloud band (not below an empty sky). */
 const PADDING_TOP = 8;
-const GROUND_H = 22;
-const ROAD_H = 14;
+const GROUND_H = 24;
+const ROAD_H = 16;
 const GAP = 8;
-const VIEW_MIN_W = 420;
+/**
+ * GitHub README scales by the SVG width/height attributes.
+ * Composition keeps a minimum sky band (like stages preview) so short cities
+ * aren't a flat ribbon; display size is then upscaled for README readability.
+ */
+const DISPLAY_TARGET_WIDTH = 920;
+const DISPLAY_MIN_HEIGHT = 280;
+/** Minimum full city height in viewBox units (sky + buildings + ground + road). */
+const MIN_COMPOSITION_H = 260;
 
 interface PlacedBuilding {
 	building: CityBuilding;
@@ -173,8 +182,11 @@ function placeBuildings(model: CityModel): {
 	}, 8);
 
 	const labelExtra = model.showBuildingLabels ? 28 : 0;
-	const contentH = maxH * SCALE;
-	const groundY = PADDING_TOP + contentH;
+	const buildingH = maxH * SCALE;
+	const stackH = buildingH + GROUND_H + ROAD_H + 14 + labelExtra;
+	// Extra sky above buildings so clouds/sun have room (matches stages preview feel).
+	const skyH = Math.max(PADDING_TOP, MIN_COMPOSITION_H - stackH);
+	const groundY = skyH + buildingH;
 	const roadY = groundY + GROUND_H;
 	const height = roadY + ROAD_H + 14 + labelExtra;
 
@@ -188,12 +200,29 @@ function placeBuildings(model: CityModel): {
 		x += sprite.width * SCALE + gap;
 	}
 
-	const width = Math.max(VIEW_MIN_W, x + PADDING_X + 40);
+	const width = Math.max(x + PADDING_X, 360);
 	return { placed, width, height, groundY, roadY };
+}
+
+function skyPeakFallback(groundY: number): number {
+	return Math.max(PADDING_TOP, Math.floor(groundY * 0.35));
+}
+
+function displaySize(width: number, height: number): { outW: number; outH: number } {
+	const scale = Math.max(
+		1,
+		DISPLAY_TARGET_WIDTH / width,
+		DISPLAY_MIN_HEIGHT / height,
+	);
+	return {
+		outW: Math.round(width * scale),
+		outH: Math.round(height * scale),
+	};
 }
 
 export function renderCitySvg(model: CityModel): string {
 	const { placed, width, height, groundY, roadY } = placeBuildings(model);
+	const { outW, outH } = displaySize(width, height);
 	const user = escapeXml(model.username);
 	const staleNote = model.stale ? " (cached)" : "";
 
@@ -284,7 +313,7 @@ export function renderCitySvg(model: CityModel): string {
 				: `.dark-only { display: none; }`;
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" viewBox="0 0 ${width} ${height}" role="img">
 <title>Kota Pixel — ${user}</title>
 <desc>Pixel city of public GitHub activity for ${user}${staleNote}. Buildings represent repositories; window lights show recent commits.</desc>
 ${renderSkyDefs()}
@@ -299,7 +328,8 @@ ${renderSkyBackground(width, height)}
 ${renderSkyDecor({
 	width,
 	theme: model.theme,
-	peakY: placed.length ? Math.min(...placed.map((p) => p.y)) : PADDING_TOP,
+	peakY: placed.length ? Math.min(...placed.map((p) => p.y)) : skyPeakFallback(groundY),
+	groundY,
 	layer: "back",
 })}
 <rect class="ground" x="0" y="${groundY}" width="${width}" height="${GROUND_H}"/>
@@ -312,7 +342,8 @@ ${buildingsSvg}
 ${renderSkyDecor({
 	width,
 	theme: model.theme,
-	peakY: placed.length ? Math.min(...placed.map((p) => p.y)) : PADDING_TOP,
+	peakY: placed.length ? Math.min(...placed.map((p) => p.y)) : skyPeakFallback(groundY),
+	groundY,
 	layer: "front",
 })}
 ${pedestrians.join("")}

@@ -1,7 +1,7 @@
 import { PALETTE } from "./buildings/palette";
 
 /** Pixel size. Keep equal to the building pixel size so vehicles match the scene. */
-const S = 3;
+const S = 4;
 
 /**
  * Sprite legend (vehicles face RIGHT by default; `rev` flips the grid to face LEFT):

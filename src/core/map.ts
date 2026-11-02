@@ -52,6 +52,20 @@ export function busCountFromMergedPrs(mergedPrs30d: number): number {
 	return Math.min(MAX_BUSES, Math.max(1, Math.floor(mergedPrs30d / 2)));
 }
 
+/** Keep roads lively like the stages preview, even when merged-PR count is 0. */
+export function carCountForCity(mergedPrs30d: number, buildingCount: number): number {
+	const fromPr = carCountFromMergedPrs(mergedPrs30d);
+	if (buildingCount <= 0) return fromPr;
+	const fromActivity = Math.min(MAX_CARS, Math.max(1, Math.ceil(buildingCount / 3)));
+	return Math.min(MAX_CARS, Math.max(fromPr, fromActivity));
+}
+
+export function busCountForCity(mergedPrs30d: number, buildingCount: number): number {
+	const fromPr = busCountFromMergedPrs(mergedPrs30d);
+	if (buildingCount < 4) return fromPr;
+	return Math.min(MAX_BUSES, Math.max(fromPr, 1));
+}
+
 export function pedestrianCountForBuildings(
 	buildings: Array<{ buildingId: CityBuilding["buildingId"] }>,
 ): number {
@@ -85,8 +99,8 @@ export function mapMetricsToCity(
 		username: metrics.username,
 		theme: options.theme,
 		buildings,
-		cars: carCountFromMergedPrs(metrics.mergedPrs30d),
-		buses: busCountFromMergedPrs(metrics.mergedPrs30d),
+		cars: carCountForCity(metrics.mergedPrs30d, buildings.length),
+		buses: busCountForCity(metrics.mergedPrs30d, buildings.length),
 		trees: treeCountFromStars(totalStars),
 		plants: plantCountFromStars(totalStars),
 		streakActive,

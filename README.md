@@ -6,6 +6,12 @@ Dynamic SVG API that renders a pixel-art city from a developer's **public** GitH
 ![Kota Pixel](https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg)
 ```
 
+SVG sudah di-scale agar enak dibaca di README (viewBox rapat ke skyline, lebar tampilan ~900px). Opsional:
+
+```html
+<img src="https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg" width="100%" alt="Kota Pixel" />
+```
+
 ## Endpoint
 
 ```http
@@ -17,7 +23,7 @@ GET /v1/city/{username}.svg
 | `limit` | `18` | Buildings shown (1–18) |
 | `theme` | `auto` | `auto` \| `light` \| `dark` |
 
-Response: `image/svg+xml` city art. Buildings map to public repos (by your commit contributions in the last 12 months). Window lights follow 30-day commits; streak ≥ 7 days enables smoke/flags; merged PRs (30d) add cars (max 3); stars add trees (max 6).
+Response: `image/svg+xml` city art. **Satu bangunan = satu repository** (bukan total contributions di profil). Level bangunan memakai **commit contributions kamu per repo** dalam 12 bulan terakhir — angka hijau “contributions in the last year” di GitHub biasanya lebih besar karena mencakup aktivitas lain / agregat berbeda. Window lights follow 30-day commits; streak ≥ 7 days enables smoke/flags; merged PRs (30d) add cars; stars add trees.
 
 Data is public-only and may lag because of cache (metrics ~6h, SVG ~1h) and GitHub's image proxy.
 

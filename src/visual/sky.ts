@@ -1,6 +1,6 @@
 import { PALETTE } from "./buildings/palette";
 
-const S = 3;
+const S = 4;
 
 /**
  * Outer <g transform> sets world position; inner animated class only uses
@@ -17,7 +17,7 @@ function cloudAt(
 	const w = Math.max(S * 4, Math.round(S * 6 * scale));
 	const delayStyle = delay ? ` style="animation-delay:${delay}s"` : "";
 	return (
-		`<g transform="translate(${x},${Math.max(0, y)})">` +
+		`<g transform="translate(${x},${y})">` +
 		`<g class="${cls}"${delayStyle} opacity="${opacity}">` +
 		`<rect x="0" y="${S}" width="${w}" height="${S * 2}" fill="${PALETTE.q}"/>` +
 		`<rect x="${S}" y="0" width="${Math.max(S, w - S * 2)}" height="${S * 2}" fill="${PALETTE.q}"/>` +
@@ -26,9 +26,13 @@ function cloudAt(
 	);
 }
 
+function clampSkyY(y: number, maxY: number): number {
+	return Math.max(2, Math.min(y, maxY));
+}
+
 function birdAt(x: number, y: number, delay: number): string {
 	return (
-		`<g transform="translate(${x},${Math.max(0, y)})">` +
+		`<g transform="translate(${x},${y})">` +
 		`<g class="bird" style="animation-delay:${delay}s">` +
 		`<rect x="0" y="2" width="3" height="2" fill="#1f2933"/>` +
 		`<rect x="3" y="0" width="3" height="2" fill="#1f2933"/>` +
@@ -37,9 +41,9 @@ function birdAt(x: number, y: number, delay: number): string {
 	);
 }
 
-function stars(width: number, count: number, peakY: number): string {
+function stars(width: number, count: number, maxY: number): string {
 	const parts: string[] = [];
-	const band = Math.max(36, peakY + 48);
+	const band = Math.max(24, maxY - 4);
 	for (let i = 0; i < count; i++) {
 		const x = 12 + ((i * 97) % Math.max(width - 24, 1));
 		const y = 4 + ((i * 53) % band);
@@ -53,7 +57,7 @@ function stars(width: number, count: number, peakY: number): string {
 
 function balloonAt(x: number, y: number, color: string, delay: number): string {
 	return (
-		`<g transform="translate(${x},${Math.max(0, y)})">` +
+		`<g transform="translate(${x},${y})">` +
 		`<g class="balloon" style="animation-delay:${delay}s">` +
 		`<rect x="0" y="0" width="6" height="8" fill="${color}"/>` +
 		`<rect x="2" y="8" width="2" height="10" fill="#888"/>` +
@@ -61,43 +65,52 @@ function balloonAt(x: number, y: number, color: string, delay: number): string {
 	);
 }
 
-function balloons(width: number, peakY: number): string {
+function balloons(width: number, peakY: number, maxY: number): string {
 	const mid = Math.floor(width * 0.5);
-	const y0 = peakY + 28;
+	const y0 = clampSkyY(peakY + 24, maxY - 8);
 	const specs: Array<[number, number, string, number]> = [
 		[mid - 10, y0, "#d94f4f", 0],
-		[mid + 18, y0 + 6, "#4a7fc0", 2.5],
-		[mid - 28, y0 + 12, "#c9a24d", 5],
-		[mid + 40, y0 - 4, "#e85d75", 7],
+		[mid + 18, clampSkyY(y0 + 6, maxY - 8), "#4a7fc0", 2.5],
+		[mid - 28, clampSkyY(y0 + 10, maxY - 8), "#c9a24d", 5],
+		[mid + 40, clampSkyY(y0 - 4, maxY - 8), "#e85d75", 7],
 	];
 	return specs.map(([x, y, c, d]) => balloonAt(x, y, c, d)).join("");
 }
 
-/** Clouds behind towers — sit around / above the peak. */
-function backClouds(width: number, peakY: number): string {
+/** Clouds behind towers — kept strictly above the ground line. */
+function backClouds(width: number, peakY: number, maxY: number): string {
 	return [
-		cloudAt(18, peakY - 6, 1.0, "cloud", 0, 0.88),
-		cloudAt(Math.floor(width * 0.3), peakY - 10, 1.25, "cloud-alt", 2, 0.85),
-		cloudAt(Math.floor(width * 0.58), peakY - 4, 0.95, "cloud", 4, 0.9),
-		cloudAt(Math.floor(width * 0.82), peakY - 8, 1.1, "cloud-alt", 1, 0.86),
-		cloudAt(40, peakY + 14, 1.15, "cloud-alt", 3, 0.8),
-		cloudAt(Math.floor(width * 0.45), peakY + 18, 1.0, "cloud", 5, 0.82),
+		cloudAt(18, clampSkyY(peakY - 6, maxY), 1.0, "cloud", 0, 0.88),
+		cloudAt(Math.floor(width * 0.3), clampSkyY(peakY - 10, maxY), 1.25, "cloud-alt", 2, 0.85),
+		cloudAt(Math.floor(width * 0.58), clampSkyY(peakY - 4, maxY), 0.95, "cloud", 4, 0.9),
+		cloudAt(Math.floor(width * 0.82), clampSkyY(peakY - 8, maxY), 1.1, "cloud-alt", 1, 0.86),
+		cloudAt(40, clampSkyY(peakY + 14, maxY), 1.15, "cloud-alt", 3, 0.8),
+		cloudAt(Math.floor(width * 0.45), clampSkyY(peakY + 18, maxY), 1.0, "cloud", 5, 0.82),
 	].join("");
 }
 
 /**
- * Clouds drawn in front of towers so the tip reads as piercing the cloud deck.
- * Anchored to peakY — not lifted away from the building.
+ * Front clouds (over peaks). On short skylines, stay in the upper sky only —
+ * never spill onto grass/road.
  */
-function frontClouds(width: number, peakY: number): string {
+function frontClouds(width: number, peakY: number, maxY: number): string {
+	const skyDepth = maxY - peakY;
+	if (skyDepth < 36) {
+		// Shallow sky: a couple of soft clouds near the top, not deep offsets.
+		return [
+			cloudAt(Math.floor(width * 0.2), clampSkyY(8, maxY), 1.0, "cloud", 1, 0.75),
+			cloudAt(Math.floor(width * 0.55), clampSkyY(14, maxY), 1.15, "cloud-alt", 2.5, 0.72),
+			cloudAt(Math.floor(width * 0.8), clampSkyY(10, maxY), 0.9, "cloud", 4, 0.7),
+		].join("");
+	}
+
+	const softMax = Math.min(maxY, peakY + Math.floor(skyDepth * 0.55));
 	return [
-		cloudAt(8, peakY + 8, 1.05, "cloud", 1.2, 0.78),
-		cloudAt(Math.floor(width * 0.22), peakY + 22, 1.2, "cloud-alt", 2.8, 0.8),
-		cloudAt(Math.floor(width * 0.48), peakY + 6, 0.9, "cloud", 0.6, 0.75),
-		cloudAt(Math.floor(width * 0.7), peakY + 26, 1.3, "cloud-alt", 4.2, 0.82),
-		cloudAt(Math.floor(width * 0.88), peakY + 12, 0.85, "cloud", 3.1, 0.77),
-		cloudAt(Math.floor(width * 0.35), peakY + 38, 1.1, "cloud", 5.5, 0.7),
-		cloudAt(Math.floor(width * 0.62), peakY + 44, 1.0, "cloud-alt", 1.8, 0.72),
+		cloudAt(8, clampSkyY(peakY + 8, softMax), 1.05, "cloud", 1.2, 0.78),
+		cloudAt(Math.floor(width * 0.22), clampSkyY(peakY + 16, softMax), 1.2, "cloud-alt", 2.8, 0.8),
+		cloudAt(Math.floor(width * 0.48), clampSkyY(peakY + 6, softMax), 0.9, "cloud", 0.6, 0.75),
+		cloudAt(Math.floor(width * 0.7), clampSkyY(peakY + 20, softMax), 1.3, "cloud-alt", 4.2, 0.82),
+		cloudAt(Math.floor(width * 0.88), clampSkyY(peakY + 12, softMax), 0.85, "cloud", 3.1, 0.77),
 	].join("");
 }
 
@@ -129,8 +142,10 @@ export function renderSkyBackground(width: number, height: number): string {
 export interface SkyDecorOptions {
 	width: number;
 	theme: "auto" | "light" | "dark";
-	/** Top Y of the tallest building — clouds wrap this instead of floating far above. */
+	/** Top Y of the tallest building. */
 	peakY: number;
+	/** Ground/grass top — clouds must stay above this. */
+	groundY: number;
 	/** `back` behind buildings, `front` overlapping peaks, `all` for standalone previews. */
 	layer?: "back" | "front" | "all";
 }
@@ -142,11 +157,13 @@ function wrapTheme(theme: SkyDecorOptions["theme"], day: string, night: string):
 }
 
 export function renderSkyDecor(options: SkyDecorOptions): string {
-	const { width, theme, peakY, layer = "all" } = options;
+	const { width, theme, peakY, groundY, layer = "all" } = options;
 	const py = Math.max(2, peakY);
+	/** Leave room above grass so clouds never sit on the road. */
+	const maxY = Math.max(20, groundY - 28);
 
 	const sun =
-		`<g transform="translate(26,${Math.max(2, py - 4)})">` +
+		`<g transform="translate(26,${clampSkyY(Math.max(2, py - 4), maxY - 20)})">` +
 		`<g class="sun">` +
 		`<circle cx="10" cy="10" r="10" fill="${PALETTE.y}"/>` +
 		`<rect x="8" y="-8" width="4" height="4" fill="${PALETTE.y}" opacity="0.7"/>` +
@@ -157,7 +174,7 @@ export function renderSkyDecor(options: SkyDecorOptions): string {
 
 	const moonX = Math.max(80, width - 56);
 	const moon =
-		`<g transform="translate(${moonX},${Math.max(2, py - 2)})">` +
+		`<g transform="translate(${moonX},${clampSkyY(Math.max(2, py - 2), maxY - 20)})">` +
 		`<g class="moon">` +
 		`<circle cx="10" cy="10" r="10" fill="${PALETTE.f}"/>` +
 		`<circle cx="16" cy="6" r="8" fill="#0d1428"/>` +
@@ -166,24 +183,24 @@ export function renderSkyDecor(options: SkyDecorOptions): string {
 	const backDay =
 		`<g class="light-only">` +
 		sun +
-		backClouds(width, py) +
-		birdAt(40, py + 20, 0) +
-		birdAt(Math.floor(width * 0.3), py + 14, 3) +
-		birdAt(Math.floor(width * 0.55), py + 8, 6) +
-		balloons(width, py) +
+		backClouds(width, py, maxY) +
+		birdAt(40, clampSkyY(py + 20, maxY - 10), 0) +
+		birdAt(Math.floor(width * 0.3), clampSkyY(py + 14, maxY - 10), 3) +
+		birdAt(Math.floor(width * 0.55), clampSkyY(py + 8, maxY - 10), 6) +
+		balloons(width, py, maxY) +
 		`</g>`;
 
 	const backNight =
 		`<g class="dark-only">` +
 		moon +
-		stars(width, Math.max(16, Math.floor(width / 24)), py) +
-		backClouds(width, py) +
-		balloonAt(Math.floor(width * 0.5), py + 30, "#7eb6ff", 1) +
-		balloonAt(Math.floor(width * 0.58), py + 36, "#c9a24d", 4) +
+		stars(width, Math.max(16, Math.floor(width / 24)), maxY) +
+		backClouds(width, py, maxY) +
+		balloonAt(Math.floor(width * 0.5), clampSkyY(py + 28, maxY - 8), "#7eb6ff", 1) +
+		balloonAt(Math.floor(width * 0.58), clampSkyY(py + 34, maxY - 8), "#c9a24d", 4) +
 		`</g>`;
 
-	const frontDay = `<g class="light-only">${frontClouds(width, py)}</g>`;
-	const frontNight = `<g class="dark-only">${frontClouds(width, py)}</g>`;
+	const frontDay = `<g class="light-only">${frontClouds(width, py, maxY)}</g>`;
+	const frontNight = `<g class="dark-only">${frontClouds(width, py, maxY)}</g>`;
 
 	if (layer === "back") return wrapTheme(theme, backDay, backNight);
 	if (layer === "front") return wrapTheme(theme, frontDay, frontNight);
