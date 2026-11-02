@@ -136,17 +136,8 @@ export async function handleRequest(
 		return svgResponse(svg, { status: 400, cacheSeconds: 60 });
 	}
 
-	const unknownParams = [...url.searchParams.keys()].filter(
-		(k) => k !== "limit" && k !== "theme",
-	);
-	if (unknownParams.length > 0) {
-		const svg = renderFallbackSvg({
-			title: "Parameter tidak dikenal",
-			message: `Hanya limit dan theme yang didukung.`,
-			status: 400,
-		});
-		return svgResponse(svg, { status: 400, cacheSeconds: 60 });
-	}
+	// Ignore unknown query keys (e.g. ?v=8 for GitHub/Camo cache-bust).
+	// Only limit + theme are read below.
 
 	const limitParam = url.searchParams.get("limit");
 	const limit =

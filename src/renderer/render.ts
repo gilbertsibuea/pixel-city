@@ -254,20 +254,31 @@ export function renderCitySvg(model: CityModel): string {
 	}
 
 	const carColors = [PALETTE.e!, "#4a7fc0", "#c9a24d", "#7a5434"];
-	const vehicles: string[] = [];
-	// Mix lanes: even index L→R (faces right), odd index R→L (faces left).
+	/**
+	 * Two lanes on the road strip (smaller Y = farther / near buildings).
+	 * Painter order must be back → front so near-lane traffic sits on top.
+	 * Back lane: R→L (rev). Front lane: L→R.
+	 */
+	const LANE_BACK = roadY + 1;
+	const LANE_FRONT = roadY + 5;
+	const vehiclePlans: Array<{ laneY: number; svg: string }> = [];
 	for (let i = 0; i < model.cars; i++) {
 		const rev = i % 2 === 1;
-		const laneY = rev ? roadY + 1 : roadY + 5;
-		vehicles.push(
-			renderCar(laneY, carColors[i % carColors.length]!, i * -3.5, rev),
-		);
+		const laneY = rev ? LANE_BACK : LANE_FRONT;
+		vehiclePlans.push({
+			laneY,
+			svg: renderCar(laneY, carColors[i % carColors.length]!, i * -3.5, rev),
+		});
 	}
 	for (let i = 0; i < model.buses; i++) {
-		const rev = i % 2 === 0; // at least one bus goes R→L when buses >= 1
-		const laneY = rev ? roadY + 0 : roadY + 4;
-		vehicles.push(renderBus(laneY, -1.5 - i * 4.5, rev));
+		const rev = i % 2 === 0;
+		const laneY = rev ? LANE_BACK : LANE_FRONT;
+		vehiclePlans.push({
+			laneY,
+			svg: renderBus(laneY, -1.5 - i * 4.5, rev),
+		});
 	}
+	vehiclePlans.sort((a, b) => a.laneY - b.laneY);
 
 	const pedPlans = placed.flatMap((p, bi) => {
 		const doorXPx = p.x + p.sprite.doorX * SCALE;
@@ -347,7 +358,14 @@ ${renderSkyDecor({
 	layer: "front",
 })}
 ${pedestrians.join("")}
-${vehicles.join("")}
+<g class="vehicles-back">${vehiclePlans
+	.filter((v) => v.laneY <= LANE_BACK)
+	.map((v) => v.svg)
+	.join("")}</g>
+<g class="vehicles-front">${vehiclePlans
+	.filter((v) => v.laneY > LANE_BACK)
+	.map((v) => v.svg)
+	.join("")}</g>
 ${emptyHint}
 ${buildingLabels}
 </svg>`;
