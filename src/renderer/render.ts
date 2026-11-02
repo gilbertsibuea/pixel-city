@@ -126,14 +126,18 @@ function renderSprite(
 		);
 	}
 
-	// Pixel language logo (common languages only) near upper facade.
-	const logo = renderLanguageLogoSvg(
-		building.primaryLanguage,
-		originX + Math.max(2, Math.floor(sprite.width / 2) - 2) * SCALE,
-		originY + Math.max(2, Math.floor(sprite.height * 0.18)) * SCALE,
-		2,
-	);
-	if (logo) parts.push(logo);
+	// Pixel language logo only on taller buildings (midrise / skyscraper).
+	const canShowLogo =
+		building.buildingId === "midrise" || building.buildingId === "skyscraper";
+	if (canShowLogo) {
+		const logo = renderLanguageLogoSvg(
+			building.primaryLanguage,
+			originX + Math.max(2, Math.floor(sprite.width / 2) - 2) * SCALE,
+			originY + Math.max(2, Math.floor(sprite.height * 0.18)) * SCALE,
+			2,
+		);
+		if (logo) parts.push(logo);
+	}
 
 	parts.push(`<title>${escapeXml(building.repoName)}</title>`);
 	return `<g data-repo="${escapeXml(building.repoName)}">${parts.join("")}</g>`;

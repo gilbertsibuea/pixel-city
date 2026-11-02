@@ -14,8 +14,6 @@ import { hashString } from "./hash";
 import { renderStagesPreviewSvg } from "./previewStages";
 
 const PREVIEW_LANG: Partial<Record<BuildingId, string>> = {
-	"wood-house": "Python",
-	"stone-shop": "JavaScript",
 	midrise: "TypeScript",
 	skyscraper: "Rust",
 };

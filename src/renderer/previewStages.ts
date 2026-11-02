@@ -16,13 +16,13 @@ export function stagesPreviewModel(theme: ThemeMode = "light"): CityModel {
 			repoName: "Rumah kayu (20–99)",
 			buildingId: "wood-house" as const,
 			languageColor: "#3572A5",
-			primaryLanguage: "Python",
+			primaryLanguage: null,
 		},
 		{
 			repoName: "Toko batu (100–299)",
 			buildingId: "stone-shop" as const,
 			languageColor: "#f1e05a",
-			primaryLanguage: "JavaScript",
+			primaryLanguage: null,
 		},
 		{
 			repoName: "Gedung (300–799)",
