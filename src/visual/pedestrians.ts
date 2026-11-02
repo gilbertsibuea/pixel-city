@@ -15,7 +15,7 @@ export function pedestriansForStage(stage: BuildingId): number {
 			return 4;
 		case "skyscraper":
 			return 5;
-		case "burj-khalifa":
+		case "landmark":
 			return 6;
 		default:
 			return 1;

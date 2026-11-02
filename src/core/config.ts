@@ -1,6 +1,6 @@
 import type { BuildingId } from "../visual";
 
-export const RENDERER_VERSION = "v9";
+export const RENDERER_VERSION = "v10";
 
 export const DEFAULT_BUILDING_LIMIT = 18;
 export const MAX_BUILDING_LIMIT = 18;
@@ -27,10 +27,10 @@ export type ThemeMode = "auto" | "light" | "dark";
 
 /** Commit contribution thresholds -> building stage (12-month window). */
 export const BUILDING_STAGES: ReadonlyArray<{ min: number; id: BuildingId }> = [
-	{ min: 1000, id: "burj-khalifa" },
-	{ min: 800, id: "skyscraper" },
-	{ min: 300, id: "midrise" },
-	{ min: 100, id: "stone-shop" },
+	{ min: 200, id: "landmark" },
+	{ min: 100, id: "skyscraper" },
+	{ min: 51, id: "midrise" },
+	{ min: 41, id: "stone-shop" },
 	{ min: 20, id: "wood-house" },
 	{ min: 1, id: "hut" },
 ];

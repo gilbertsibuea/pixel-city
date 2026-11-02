@@ -31,12 +31,14 @@ describe("building stages", () => {
 		expect(buildingIdForCommits(1)).toBe("hut");
 		expect(buildingIdForCommits(19)).toBe("hut");
 		expect(buildingIdForCommits(20)).toBe("wood-house");
-		expect(buildingIdForCommits(99)).toBe("wood-house");
-		expect(buildingIdForCommits(100)).toBe("stone-shop");
-		expect(buildingIdForCommits(300)).toBe("midrise");
-		expect(buildingIdForCommits(800)).toBe("skyscraper");
-		expect(buildingIdForCommits(999)).toBe("skyscraper");
-		expect(buildingIdForCommits(1000)).toBe("burj-khalifa");
+		expect(buildingIdForCommits(40)).toBe("wood-house");
+		expect(buildingIdForCommits(41)).toBe("stone-shop");
+		expect(buildingIdForCommits(50)).toBe("stone-shop");
+		expect(buildingIdForCommits(51)).toBe("midrise");
+		expect(buildingIdForCommits(99)).toBe("midrise");
+		expect(buildingIdForCommits(100)).toBe("skyscraper");
+		expect(buildingIdForCommits(199)).toBe("skyscraper");
+		expect(buildingIdForCommits(200)).toBe("landmark");
 	});
 });
 
@@ -73,7 +75,7 @@ describe("city mapping", () => {
 		};
 		const city = mapMetricsToCity(metrics, { limit: 18, theme: "light" });
 		expect(city.buildings).toHaveLength(1);
-		expect(city.buildings[0]?.buildingId).toBe("stone-shop");
+		expect(city.buildings[0]?.buildingId).toBe("skyscraper");
 		expect(city.buildings[0]?.smoke).toBe(true);
 		expect(city.buildings[0]?.flag).toBe(true);
 		expect(city.cars).toBe(4);

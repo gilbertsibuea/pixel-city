@@ -17,17 +17,17 @@ import { renderStagesPreviewSvg } from "./previewStages";
 const PREVIEW_LANG: Partial<Record<BuildingId, string>> = {
 	midrise: "TypeScript",
 	skyscraper: "Rust",
-	"burj-khalifa": "Go",
+	landmark: "Go",
 };
 
 const SCALE = 4;
 const STAGE_LABEL: Record<BuildingId, string> = {
 	hut: "1–19 commits",
-	"wood-house": "20–99 commits",
-	"stone-shop": "100–299 commits",
-	midrise: "300–799 commits",
-	skyscraper: "800–999 commits",
-	"burj-khalifa": "1000+ commits",
+	"wood-house": "20–40 commits",
+	"stone-shop": "41–50 commits",
+	midrise: "51–99 commits",
+	skyscraper: "100–199 commits",
+	landmark: "200+ commits",
 };
 
 const BUILDING_IDS = new Set(BUILDINGS.map((b) => b.id));
@@ -161,7 +161,7 @@ ${renderLanguageLogoCentered(
 	oy +
 		sprite.height *
 			SCALE *
-			(id === "burj-khalifa" ? 0.3 : id === "skyscraper" ? 0.16 : 0.14),
+			(id === "landmark" ? 0.3 : id === "skyscraper" ? 0.16 : 0.14),
 	2,
 )}
 <text class="lbl" x="${pad}" y="${height - metaH + 8}" font-size="14">${escapeXml(sprite.name)}</text>

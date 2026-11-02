@@ -144,13 +144,13 @@ function renderSprite(
 	const canShowLogo =
 		building.buildingId === "midrise" ||
 		building.buildingId === "skyscraper" ||
-		building.buildingId === "burj-khalifa";
+		building.buildingId === "landmark";
 	if (canShowLogo) {
 		const logoPixel = 2;
 		const centerX = originX + (sprite.width * SCALE) / 2;
-		// Sit on upper body (Burj: a bit lower so it rests on a wider tier).
+		// Sit on upper body (landmark: a bit lower so it rests on a wider tier).
 		const yRatio =
-			building.buildingId === "burj-khalifa"
+			building.buildingId === "landmark"
 				? 0.3
 				: building.buildingId === "skyscraper"
 					? 0.16

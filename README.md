@@ -40,7 +40,7 @@ npm run dev
 Open:
 
 - `http://localhost:8787/preview` — gallery: tiap building + lingkungan
-- `http://localhost:8787/v1/preview/building/hut.svg` — satu stage (hut … burj-khalifa)
+- `http://localhost:8787/v1/preview/building/hut.svg` — satu stage (hut … landmark)
 - `http://localhost:8787/v1/preview/environment.svg` — langit, jalan, pohon, mobil, efek, palette
 - `http://localhost:8787/v1/preview/stages.svg` — semua stage dalam satu kota
 - `http://localhost:8787/v1/city/octocat.svg` — kota dari data GitHub
@@ -59,11 +59,11 @@ npm test
 
 | Commits (12m) | Building |
 |---|---|
-| 1–19 | Gubuk |
-| 20–99 | Rumah kayu |
-| 100–299 | Toko batu |
-| 300–799 | Gedung bertingkat |
-| 800–999 | Pencakar langit |
-| 1000+ | Burj Khalifa |
+| 1–19 | Gubuk (Hut) |
+| 20–40 | Rumah kayu (House) |
+| 41–50 | Toko batu (Shop) |
+| 51–99 | Gedung bertingkat (Mid-rise) |
+| 100–199 | Pencakar langit (Skyscraper) |
+| 200+ | Menara landmark (Landmark) |
 
 Sprites live under `src/visual/buildings` (from `docs/building`).

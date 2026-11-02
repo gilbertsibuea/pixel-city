@@ -4,7 +4,7 @@ import { woodHouse } from "./wood-house";
 import { stoneShop } from "./stone-shop";
 import { midrise } from "./midrise";
 import { skyscraper } from "./skyscraper";
-import { burjKhalifa } from "./burj-khalifa";
+import { landmark } from "./landmark";
 
 /** Ordered by stage: index 0 = tahap 1 ... index 5 = tahap 6. */
 export const BUILDINGS: readonly BuildingSprite[] = [
@@ -13,7 +13,7 @@ export const BUILDINGS: readonly BuildingSprite[] = [
 	stoneShop,
 	midrise,
 	skyscraper,
-	burjKhalifa,
+	landmark,
 ];
 
 export const BUILDING_BY_ID: Readonly<Record<BuildingId, BuildingSprite>> = {
@@ -22,7 +22,7 @@ export const BUILDING_BY_ID: Readonly<Record<BuildingId, BuildingSprite>> = {
 	"stone-shop": stoneShop,
 	midrise,
 	skyscraper,
-	"burj-khalifa": burjKhalifa,
+	landmark,
 };
 
-export { hut, woodHouse, stoneShop, midrise, skyscraper, burjKhalifa };
+export { hut, woodHouse, stoneShop, midrise, skyscraper, landmark };

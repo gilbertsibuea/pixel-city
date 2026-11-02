@@ -1,10 +1,10 @@
 import { defineSprite } from "./types";
 
 /**
- * Tahap 6: menara bertingkat mengecil ala Burj Khalifa.
+ * Tahap 6: menara landmark bertingkat mengecil (spire + tapering tiers).
  * Fixed width grid; each tier is centered with transparent padding.
  */
-function makeBurjRows(): string[] {
+function makeLandmarkRows(): string[] {
 	const W = 16;
 	const rows: string[] = [];
 
@@ -12,7 +12,7 @@ function makeBurjRows(): string[] {
 		const pad = Math.floor((W - inner.length) / 2);
 		const line = ".".repeat(pad) + inner + ".".repeat(W - pad - inner.length);
 		if (line.length !== W) {
-			throw new Error(`Burj row width ${line.length}, expected ${W}`);
+			throw new Error(`Landmark row width ${line.length}, expected ${W}`);
 		}
 		rows.push(line);
 	};
@@ -66,9 +66,9 @@ function makeBurjRows(): string[] {
 	return rows;
 }
 
-/** Tahap 6: landmark 1000+ commits. */
-export const burjKhalifa = defineSprite({
-	id: "burj-khalifa",
-	name: "Burj Khalifa",
-	rows: makeBurjRows(),
+/** Tahap 6: landmark 200+ commits. */
+export const landmark = defineSprite({
+	id: "landmark",
+	name: "Menara landmark",
+	rows: makeLandmarkRows(),
 });

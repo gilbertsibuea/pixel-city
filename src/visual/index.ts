@@ -6,7 +6,7 @@ export {
 	stoneShop,
 	midrise,
 	skyscraper,
-	burjKhalifa,
+	landmark,
 } from "./buildings/index";
 export type { BuildingId, BuildingSprite } from "./buildings/types";
 export { PALETTE, LANGUAGE_FALLBACK_COLOR } from "./buildings/palette";

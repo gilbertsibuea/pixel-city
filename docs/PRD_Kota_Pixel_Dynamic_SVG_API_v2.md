@@ -117,7 +117,7 @@ Jika prototipe memiliki file atau modul visual yang sudah bekerja, modul tersebu
 | Data GitHub | Elemen visual | Ketentuan MVP |
 |---|---|---|
 | Repository publik milik pengguna | Satu bangunan per repository | Maksimal 18 repository teratas berdasarkan jumlah kontribusi commit pengguna pada periode data |
-| Jumlah commit kontribusi pengguna dalam 12 bulan terakhir | Tahap bangunan | 1–19: gubuk; 20–99: rumah kayu; 100–299: toko batu; 300–799: gedung bertingkat; 800+: pencakar langit |
+| Jumlah commit kontribusi pengguna dalam 12 bulan terakhir | Tahap bangunan | 1–19: gubuk; 20–40: rumah kayu; 41–50: toko batu; 51–99: gedung bertingkat; 100–199: pencakar langit; 200+: menara landmark |
 | Bahasa utama repository | Warna jendela | Menggunakan warna bahasa dari metadata GitHub; fallback ke warna netral jika bahasa tidak tersedia |
 | Commit dalam 30 hari terakhir | Persentase/intensitas jendela menyala | Mengikuti rumus visual pada prototipe; jika rumus belum ditentukan, tetapkan dan uji sebelum renderer dinyatakan selesai |
 | Aktivitas harian beruntun minimal 7 hari | Asap cerobong dan bendera aktif | Streak dihitung dari kalender kontribusi publik yang tersedia |

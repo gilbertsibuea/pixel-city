@@ -12,7 +12,7 @@ export type BuildingId =
 	| "stone-shop"
 	| "midrise"
 	| "skyscraper"
-	| "burj-khalifa";
+	| "landmark";
 
 export interface BuildingSprite {
 	id: BuildingId;
