@@ -26,6 +26,8 @@ export interface CityBuilding {
 	repoName: string;
 	buildingId: BuildingId;
 	languageColor: string;
+	/** GitHub primary language name; logo only for common languages. */
+	primaryLanguage: string | null;
 	/** 0..1 fraction of windows that should be lit. */
 	litRatio: number;
 	smoke: boolean;
@@ -37,7 +39,10 @@ export interface CityModel {
 	theme: ThemeMode;
 	buildings: CityBuilding[];
 	cars: number;
+	buses: number;
 	trees: number;
+	/** Extra bushes/flowers along the ground. */
+	plants: number;
 	streakActive: boolean;
 	generatedAt: string;
 	stale?: boolean;

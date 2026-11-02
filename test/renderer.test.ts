@@ -48,6 +48,9 @@ describe("renderCitySvg", () => {
 		expect(svg).toContain("<svg");
 		expect(svg.toLowerCase()).not.toContain("<script");
 		expect(svg).toContain("demo&lt;script&gt;");
+		expect(svg).toContain('class="vehicle"');
+		expect(svg).toContain("pedestrian");
+		expect(svg).toContain("lang-logo");
 		expect(new TextEncoder().encode(svg).byteLength).toBeLessThan(100_000);
 		expect(svg).toContain("prefers-reduced-motion");
 	});

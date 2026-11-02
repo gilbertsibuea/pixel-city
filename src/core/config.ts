@@ -1,15 +1,17 @@
 import type { BuildingId } from "../visual";
 
-export const RENDERER_VERSION = "v1";
+export const RENDERER_VERSION = "v2";
 
 export const DEFAULT_BUILDING_LIMIT = 18;
 export const MAX_BUILDING_LIMIT = 18;
-export const MAX_CARS = 3;
-export const MAX_TREES = 6;
+export const MAX_CARS = 4;
+export const MAX_BUSES = 2;
+export const MAX_TREES = 10;
+export const MAX_PLANTS = 12;
 export const STREAK_ACTIVE_DAYS = 7;
 
 /** Stars per tree (capped at MAX_TREES). Uses visualized repos' stars. */
-export const STARS_PER_TREE = 10;
+export const STARS_PER_TREE = 8;
 
 /** Commits in 30d that fully light all windows of a building. */
 export const WINDOW_FULL_LIT_COMMITS = 20;

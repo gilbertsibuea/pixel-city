@@ -1,8 +1,17 @@
 import type { CityBuilding, CityModel } from "../core/types";
 import {
 	BUILDING_BY_ID,
-	CITY_ANIMATIONS_CSS,
+	cityAnimationsCss,
 	PALETTE,
+	renderBush,
+	renderBus,
+	renderCar,
+	renderFlower,
+	renderLanguageLogoSvg,
+	renderPedestrian,
+	renderSkyDecor,
+	renderTree,
+	pedestriansForStage,
 	type BuildingSprite,
 } from "../visual";
 import { escapeCssColor, escapeXml } from "./escape";
@@ -10,10 +19,10 @@ import { hashString } from "./hash";
 
 const SCALE = 3;
 const PADDING_X = 16;
-const PADDING_TOP = 28;
-const GROUND_H = 18;
-const ROAD_H = 10;
-const GAP = 6;
+const PADDING_TOP = 40;
+const GROUND_H = 22;
+const ROAD_H = 14;
+const GAP = 8;
 const VIEW_MIN_W = 420;
 
 interface PlacedBuilding {
@@ -57,9 +66,9 @@ function renderSprite(
 	const windowCells: Array<{ x: number; y: number }> = [];
 
 	for (let row = 0; row < sprite.rows.length; row++) {
-		const line = sprite.rows[row];
+		const line = sprite.rows[row]!;
 		for (let col = 0; col < line.length; col++) {
-			const ch = line[col];
+			const ch = line[col]!;
 			if (ch === ".") continue;
 			const x = originX + col * SCALE;
 			const y = originY + row * SCALE;
@@ -88,7 +97,7 @@ function renderSprite(
 
 	const winColor = escapeCssColor(building.languageColor);
 	for (let i = 0; i < order.length; i++) {
-		const { x, y } = order[i].cell;
+		const { x, y } = order[i]!.cell;
 		const on = i < litCount;
 		const cls = on ? 'class="win on"' : 'class="win"';
 		const fill = on ? winColor : (PALETTE.w ?? "#8fb4d6");
@@ -117,36 +126,17 @@ function renderSprite(
 		);
 	}
 
-	const label = escapeXml(building.repoName);
-	parts.push(
-		`<title>${label}</title>`,
+	// Pixel language logo (common languages only) near upper facade.
+	const logo = renderLanguageLogoSvg(
+		building.primaryLanguage,
+		originX + Math.max(2, Math.floor(sprite.width / 2) - 2) * SCALE,
+		originY + Math.max(2, Math.floor(sprite.height * 0.18)) * SCALE,
+		2,
 	);
+	if (logo) parts.push(logo);
 
+	parts.push(`<title>${escapeXml(building.repoName)}</title>`);
 	return `<g data-repo="${escapeXml(building.repoName)}">${parts.join("")}</g>`;
-}
-
-function renderTree(x: number, groundY: number, i: number): string {
-	const trunkH = 4 * SCALE;
-	const topY = groundY - trunkH - 4 * SCALE;
-	return (
-		`<g class="tree" transform="translate(${x},0)">` +
-		`<rect x="2" y="${groundY - trunkH}" width="${SCALE}" height="${trunkH}" fill="${PALETTE.b}"/>` +
-		`<g class="tree-top">` +
-		`<rect x="0" y="${topY}" width="${SCALE * 3}" height="${SCALE * 3}" fill="${PALETTE.g}"/>` +
-		`<rect x="${SCALE}" y="${topY - SCALE}" width="${SCALE}" height="${SCALE}" fill="${PALETTE.g}"/>` +
-		`</g></g>`
-	);
-}
-
-function renderCar(y: number, delay: number, color: string): string {
-	return (
-		`<g class="car" style="animation-delay:${delay}s">` +
-		`<rect x="0" y="${y}" width="${SCALE * 5}" height="${SCALE * 2}" fill="${color}"/>` +
-		`<rect x="${SCALE}" y="${y - SCALE}" width="${SCALE * 3}" height="${SCALE}" fill="#dce6f0"/>` +
-		`<rect x="${SCALE}" y="${y + SCALE * 2}" width="${SCALE}" height="${SCALE}" fill="${PALETTE.n}"/>` +
-		`<rect x="${SCALE * 3}" y="${y + SCALE * 2}" width="${SCALE}" height="${SCALE}" fill="${PALETTE.n}"/>` +
-		`</g>`
-	);
 }
 
 function placeBuildings(model: CityModel): {
@@ -165,7 +155,7 @@ function placeBuildings(model: CityModel): {
 	const contentH = maxH * SCALE;
 	const groundY = PADDING_TOP + contentH;
 	const roadY = groundY + GROUND_H;
-	const height = roadY + ROAD_H + 12 + labelExtra;
+	const height = roadY + ROAD_H + 14 + labelExtra;
 
 	let x = PADDING_X;
 	const placed: PlacedBuilding[] = [];
@@ -186,24 +176,6 @@ export function renderCitySvg(model: CityModel): string {
 	const user = escapeXml(model.username);
 	const staleNote = model.stale ? " (cached)" : "";
 
-	const skyExtras =
-		model.theme === "dark"
-			? `<circle class="moon" cx="${width - 36}" cy="22" r="10" fill="${PALETTE.f}"/>`
-			: model.theme === "light"
-				? `<g class="sun"><circle cx="36" cy="22" r="10" fill="${PALETTE.y}"/></g>`
-				: `<g class="sun light-only"><circle cx="36" cy="22" r="10" fill="${PALETTE.y}"/></g>` +
-					`<circle class="moon dark-only" cx="${width - 36}" cy="22" r="10" fill="${PALETTE.f}"/>`;
-
-	const clouds =
-		`<g class="cloud" opacity="0.9">` +
-		`<rect x="70" y="14" width="${SCALE * 6}" height="${SCALE * 2}" fill="${PALETTE.q}"/>` +
-		`<rect x="76" y="10" width="${SCALE * 4}" height="${SCALE * 2}" fill="${PALETTE.q}"/>` +
-		`</g>` +
-		`<g class="cloud" opacity="0.75" style="animation-delay:8s">` +
-		`<rect x="${Math.floor(width * 0.45)}" y="20" width="${SCALE * 7}" height="${SCALE * 2}" fill="${PALETTE.q}"/>` +
-		`<rect x="${Math.floor(width * 0.45) + 6}" y="16" width="${SCALE * 4}" height="${SCALE * 2}" fill="${PALETTE.q}"/>` +
-		`</g>`;
-
 	const buildingsSvg = placed
 		.map((p) =>
 			renderSprite(
@@ -216,26 +188,48 @@ export function renderCitySvg(model: CityModel): string {
 		)
 		.join("");
 
-	const treeParts: string[] = [];
+	const flora: string[] = [];
 	const treeSlots = Math.max(model.trees, 0);
 	for (let i = 0; i < treeSlots; i++) {
 		const side = i % 2 === 0 ? "left" : "right";
 		const idx = Math.floor(i / 2);
-		const tx =
-			side === "left"
-				? 4 + idx * 14
-				: width - 20 - idx * 14;
-		treeParts.push(renderTree(tx, groundY, i));
+		const tx = side === "left" ? 4 + idx * 16 : width - 22 - idx * 16;
+		flora.push(renderTree(tx, groundY, i));
+	}
+	const plantSlots = Math.max(model.plants, 0);
+	for (let i = 0; i < plantSlots; i++) {
+		const x = 20 + ((i * 37) % Math.max(width - 40, 1));
+		if (i % 3 === 0) flora.push(renderFlower(x, groundY, i));
+		else flora.push(renderBush(x, groundY, i));
 	}
 
-	const carColors = [PALETTE.e, "#4a7fc0", "#c9a24d"];
-	const cars = Array.from({ length: model.cars }, (_, i) =>
-		renderCar(roadY + 2, i * 5.5, carColors[i % carColors.length]!),
-	).join("");
+	const carColors = [PALETTE.e!, "#4a7fc0", "#c9a24d", "#7a5434"];
+	const vehicles: string[] = [];
+	for (let i = 0; i < model.cars; i++) {
+		vehicles.push(
+			renderCar(roadY + 4, carColors[i % carColors.length]!, i * -3.5, false),
+		);
+	}
+	for (let i = 0; i < model.buses; i++) {
+		vehicles.push(renderBus(roadY + 3, -1.5 - i * 4.5, i % 2 === 1));
+	}
+
+	const pedestrians: string[] = [];
+	let pedIndex = 0;
+	for (const p of placed) {
+		const count = pedestriansForStage(p.building.buildingId);
+		for (let i = 0; i < count; i++) {
+			const px = p.x + 4 + i * 7;
+			pedestrians.push(
+				renderPedestrian(px, groundY, pedIndex, (pedIndex % 5) * 0.4),
+			);
+			pedIndex += 1;
+		}
+	}
 
 	const emptyHint =
 		placed.length === 0
-			? `<text class="lbl" x="${width / 2}" y="${groundY - 20}" text-anchor="middle" font-family="monospace" font-size="10">Belum ada bangunan publik</text>`
+			? `<text class="lbl" x="${width / 2}" y="${groundY - 20}" text-anchor="middle" font-size="10">Belum ada bangunan publik</text>`
 			: "";
 
 	const buildingLabels = model.showBuildingLabels
@@ -243,7 +237,7 @@ export function renderCitySvg(model: CityModel): string {
 				.map((p) => {
 					const cx = p.x + (p.sprite.width * SCALE) / 2;
 					const label = escapeXml(p.building.repoName);
-					return `<text class="lbl" x="${cx}" y="${roadY + ROAD_H + 14}" text-anchor="middle" font-size="9">${label}</text>`;
+					return `<text class="lbl" x="${cx}" y="${roadY + ROAD_H + 12}" text-anchor="middle" font-size="9">${label}</text>`;
 				})
 				.join("")
 		: "";
@@ -267,20 +261,20 @@ export function renderCitySvg(model: CityModel): string {
 <style>
 ${themeCss(model.theme)}
 ${visibilityCss}
-${CITY_ANIMATIONS_CSS}
+${cityAnimationsCss(width + 80)}
 text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
 <rect class="sky" width="${width}" height="${height}"/>
-${skyExtras}
-${clouds}
+${renderSkyDecor({ width, theme: model.theme })}
 <rect class="ground" x="0" y="${groundY}" width="${width}" height="${GROUND_H}"/>
 <rect class="road" x="0" y="${roadY}" width="${width}" height="${ROAD_H}"/>
 ${Array.from({ length: Math.ceil(width / 24) }, (_, i) =>
-	`<rect class="road-line" x="${8 + i * 24}" y="${roadY + 4}" width="10" height="2"/>`,
+	`<rect class="road-line" x="${8 + i * 24}" y="${roadY + 6}" width="10" height="2"/>`,
 ).join("")}
-${treeParts.join("")}
+${flora.join("")}
 ${buildingsSvg}
-${cars}
+${pedestrians.join("")}
+${vehicles.join("")}
 ${emptyHint}
 ${buildingLabels}
 <text class="lbl" x="8" y="${height - 4}" font-size="9">@${user}${model.stale ? " · stale" : ""}</text>

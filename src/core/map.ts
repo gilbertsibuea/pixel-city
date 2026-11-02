@@ -1,5 +1,7 @@
 import {
+	MAX_BUSES,
 	MAX_CARS,
+	MAX_PLANTS,
 	MAX_TREES,
 	STARS_PER_TREE,
 	STREAK_ACTIVE_DAYS,
@@ -9,6 +11,7 @@ import {
 } from "./config";
 import type { CityBuilding, CityMetrics, CityModel, RepositoryMetric } from "./types";
 import { LANGUAGE_FALLBACK_COLOR } from "../visual";
+import { pedestriansForStage } from "../visual/pedestrians";
 
 export function sortRepositories(repos: RepositoryMetric[]): RepositoryMetric[] {
 	return [...repos].sort((a, b) => {
@@ -35,8 +38,24 @@ export function treeCountFromStars(totalStars: number): number {
 	return Math.min(MAX_TREES, Math.max(1, Math.floor(totalStars / STARS_PER_TREE)));
 }
 
+export function plantCountFromStars(totalStars: number): number {
+	if (totalStars <= 0) return 2;
+	return Math.min(MAX_PLANTS, Math.max(3, Math.floor(totalStars / 5)));
+}
+
 export function carCountFromMergedPrs(mergedPrs30d: number): number {
 	return Math.min(MAX_CARS, Math.max(0, Math.floor(mergedPrs30d)));
+}
+
+export function busCountFromMergedPrs(mergedPrs30d: number): number {
+	if (mergedPrs30d <= 0) return 0;
+	return Math.min(MAX_BUSES, Math.max(1, Math.floor(mergedPrs30d / 2)));
+}
+
+export function pedestrianCountForBuildings(
+	buildings: Array<{ buildingId: CityBuilding["buildingId"] }>,
+): number {
+	return buildings.reduce((sum, b) => sum + pedestriansForStage(b.buildingId), 0);
 }
 
 export function mapMetricsToCity(
@@ -55,6 +74,7 @@ export function mapMetricsToCity(
 			repoName: repo.name,
 			buildingId,
 			languageColor: repo.languageColor ?? LANGUAGE_FALLBACK_COLOR,
+			primaryLanguage: repo.primaryLanguage,
 			litRatio: litRatioForCommits(repo.commits30d),
 			smoke: streakActive,
 			flag: streakActive,
@@ -66,7 +86,9 @@ export function mapMetricsToCity(
 		theme: options.theme,
 		buildings,
 		cars: carCountFromMergedPrs(metrics.mergedPrs30d),
+		buses: busCountFromMergedPrs(metrics.mergedPrs30d),
 		trees: treeCountFromStars(totalStars),
+		plants: plantCountFromStars(totalStars),
 		streakActive,
 		generatedAt: metrics.fetchedAt,
 		stale: options.stale,

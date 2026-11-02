@@ -3,13 +3,22 @@ import {
 	BUILDINGS,
 	BUILDING_BY_ID,
 	CITY_ANIMATIONS_CSS,
+	COMMON_LANGUAGE_LOGO_IDS,
 	PALETTE,
+	renderLanguageLogoSvg,
 	type BuildingId,
 	type BuildingSprite,
 } from "../visual";
 import { escapeCssColor, escapeXml } from "./escape";
 import { hashString } from "./hash";
 import { renderStagesPreviewSvg } from "./previewStages";
+
+const PREVIEW_LANG: Partial<Record<BuildingId, string>> = {
+	"wood-house": "Python",
+	"stone-shop": "JavaScript",
+	midrise: "TypeScript",
+	skyscraper: "Rust",
+};
 
 const SCALE = 4;
 const STAGE_LABEL: Record<BuildingId, string> = {
@@ -145,6 +154,12 @@ ${renderGridSprite(sprite, ox, oy, {
 	flag: true,
 	seed: `preview/${id}`,
 })}
+${renderLanguageLogoSvg(
+	PREVIEW_LANG[id] ?? null,
+	ox + Math.max(2, Math.floor(sprite.width / 2) - 2) * SCALE,
+	oy + Math.max(2, Math.floor(sprite.height * 0.18)) * SCALE,
+	2,
+)}
 <text class="lbl" x="${pad}" y="${height - metaH + 8}" font-size="14">${escapeXml(sprite.name)}</text>
 <text class="muted" x="${pad}" y="${height - metaH + 28}" font-size="11">id: ${escapeXml(id)} · ${escapeXml(STAGE_LABEL[id])}</text>
 <text class="muted" x="${pad}" y="${height - metaH + 46}" font-size="10">min commits: ${minCommits}</text>
@@ -172,51 +187,71 @@ function panel(
 
 export function renderEnvironmentPreviewSvg(themeRaw: string | null): string {
 	const theme = parseTheme(themeRaw);
-	const width = 760;
-	const height = 520;
+	const width = 820;
+	const height = 720;
 	const S = 3;
 
 	const skyDay =
-		`<rect x="12" y="28" width="140" height="70" fill="#87b8e8"/>` +
-		`<g class="sun"><circle cx="40" cy="50" r="10" fill="${PALETTE.y}"/></g>` +
-		`<g class="cloud"><rect x="70" y="44" width="${S * 6}" height="${S * 2}" fill="${PALETTE.q}"/><rect x="76" y="40" width="${S * 4}" height="${S * 2}" fill="${PALETTE.q}"/></g>`;
+		`<rect x="12" y="28" width="200" height="90" fill="#87b8e8"/>` +
+		`<g class="sun"><circle cx="40" cy="52" r="10" fill="${PALETTE.y}"/><rect x="38" y="34" width="4" height="4" fill="${PALETTE.y}"/></g>` +
+		`<g class="cloud"><rect x="70" y="44" width="${S * 6}" height="${S * 2}" fill="${PALETTE.q}"/><rect x="76" y="40" width="${S * 4}" height="${S * 2}" fill="${PALETTE.q}"/></g>` +
+		`<g class="cloud-alt"><rect x="130" y="58" width="${S * 5}" height="${S * 2}" fill="${PALETTE.q}"/></g>` +
+		`<g class="bird"><rect x="50" y="78" width="3" height="2" fill="#1f2933"/><rect x="53" y="76" width="3" height="2" fill="#1f2933"/><rect x="56" y="78" width="3" height="2" fill="#1f2933"/></g>` +
+		`<g class="balloon"><rect x="170" y="40" width="6" height="8" fill="#d94f4f"/><rect x="172" y="48" width="2" height="8" fill="#888"/></g>`;
 
 	const skyNight =
-		`<rect x="12" y="28" width="140" height="70" fill="#1a2233"/>` +
-		`<circle cx="130" cy="48" r="10" fill="${PALETTE.f}"/>` +
-		`<rect x="40" y="42" width="2" height="2" fill="#fff"/><rect x="60" y="55" width="2" height="2" fill="#fff"/><rect x="90" y="40" width="2" height="2" fill="#fff"/>`;
+		`<rect x="12" y="28" width="200" height="90" fill="#1a2233"/>` +
+		`<circle cx="170" cy="48" r="10" fill="${PALETTE.f}"/>` +
+		`<rect class="star" x="40" y="42" width="2" height="2" fill="#fff"/>` +
+		`<rect class="star" style="animation-delay:.4s" x="60" y="55" width="2" height="2" fill="#fff"/>` +
+		`<rect class="star" style="animation-delay:.8s" x="90" y="40" width="2" height="2" fill="#fff"/>` +
+		`<rect class="star" style="animation-delay:1.2s" x="110" y="62" width="2" height="2" fill="#fff"/>` +
+		`<rect class="star" x="130" y="36" width="2" height="2" fill="#fff"/>` +
+		`<g class="cloud"><rect x="40" y="70" width="${S * 6}" height="${S * 2}" fill="#9aa8b8" opacity="0.5"/></g>`;
 
 	const groundRoad =
-		`<rect x="12" y="40" width="200" height="28" fill="#5a8f45"/>` +
-		`<rect x="12" y="68" width="200" height="16" fill="#4a4a52"/>` +
-		`<rect x="24" y="74" width="12" height="3" fill="#d4d4d8"/>` +
-		`<rect x="52" y="74" width="12" height="3" fill="#d4d4d8"/>` +
-		`<rect x="80" y="74" width="12" height="3" fill="#d4d4d8"/>` +
+		`<rect x="12" y="40" width="220" height="28" fill="#5a8f45"/>` +
+		`<rect x="12" y="68" width="220" height="20" fill="#4a4a52"/>` +
+		`<rect x="24" y="76" width="12" height="3" fill="#d4d4d8"/>` +
+		`<rect x="52" y="76" width="12" height="3" fill="#d4d4d8"/>` +
+		`<rect x="80" y="76" width="12" height="3" fill="#d4d4d8"/>` +
 		`<text class="muted" x="12" y="34" font-size="10">rumput + aspal + marka</text>`;
 
-	const tree =
-		`<g transform="translate(40,30)">` +
+	const flora =
+		`<g transform="translate(20,24)">` +
 		`<rect x="8" y="48" width="${S}" height="${S * 4}" fill="${PALETTE.b}"/>` +
-		`<g class="tree-top"><rect x="2" y="30" width="${S * 3}" height="${S * 3}" fill="${PALETTE.g}"/><rect x="${2 + S}" y="${30 - S}" width="${S}" height="${S}" fill="${PALETTE.g}"/></g>` +
+		`<g class="tree-top"><rect x="2" y="30" width="${S * 3}" height="${S * 3}" fill="${PALETTE.g}"/></g>` +
+		`<rect x="40" y="54" width="${S * 4}" height="${S}" fill="${PALETTE.g}"/><rect x="43" y="51" width="${S * 2}" height="${S}" fill="#3d6e30"/>` +
+		`<rect x="70" y="50" width="${S}" height="${S}" fill="#e85d75"/><rect x="70" y="53" width="2" height="${S}" fill="${PALETTE.g}"/>` +
 		`</g>` +
-		`<text class="muted" x="12" y="110" font-size="10">dari total stars (max 6)</text>`;
+		`<text class="muted" x="12" y="110" font-size="10">pohon + semak + bunga (stars)</text>`;
 
-	const cars =
-		[0, 1, 2]
+	const traffic =
+		`<g transform="translate(16,40)">` +
+		`<rect width="${S * 5}" height="${S * 2}" fill="${PALETTE.e}"/><rect x="${S}" y="${-S}" width="${S * 3}" height="${S}" fill="#dce6f0"/>` +
+		`</g>` +
+		`<g transform="translate(50,38)">` +
+		`<rect y="${-S}" width="${S * 9}" height="${S * 3}" fill="#e6a817"/>` +
+		`<rect x="${S}" y="${-S * 2}" width="${S * 2}" height="${S}" fill="#dce6f0"/>` +
+		`</g>` +
+		`<g class="vehicle" transform="translate(0,70)"><rect y="0" width="${S * 5}" height="${S * 2}" fill="#4a7fc0"/></g>` +
+		`<text class="muted" x="12" y="118" font-size="10">mobil + bus (merged PR)</text>`;
+
+	const peds =
+		[0, 1, 2, 3, 4]
 			.map((i) => {
-				const colors = [PALETTE.e, "#4a7fc0", "#c9a24d"];
-				const x = 16 + i * 55;
+				const x = 20 + i * 18;
+				const shirt = ["#d94f4f", "#4a7fc0", "#c9a24d", "#7a5434", "#5d6b82"][i];
 				return (
-					`<g class="car" style="animation:none;transform:none" transform="translate(${x},48)">` +
-					`<rect width="${S * 5}" height="${S * 2}" fill="${colors[i]}"/>` +
-					`<rect x="${S}" y="${-S}" width="${S * 3}" height="${S}" fill="#dce6f0"/>` +
-					`<rect x="${S}" y="${S * 2}" width="${S}" height="${S}" fill="${PALETTE.n}"/>` +
-					`<rect x="${S * 3}" y="${S * 2}" width="${S}" height="${S}" fill="${PALETTE.n}"/>` +
+					`<g transform="translate(${x},40)">` +
+					`<rect x="3" y="0" width="3" height="3" fill="#f1c27d"/>` +
+					`<rect x="3" y="3" width="3" height="6" fill="${shirt}"/>` +
+					`<rect x="3" y="9" width="3" height="6" fill="#2a2a32"/>` +
 					`</g>`
 				);
 			})
 			.join("") +
-		`<text class="muted" x="12" y="110" font-size="10">merged PR 30 hari (max 3)</text>`;
+		`<text class="muted" x="12" y="110" font-size="10">1→5 orang per stage gedung</text>`;
 
 	const fx =
 		`<g class="smoke" transform="translate(24,50)"><rect width="${S}" height="${S}" fill="#c8c8c8"/><rect x="${S}" y="${-S}" width="${S}" height="${S}" fill="#d8d8d8"/></g>` +
@@ -224,12 +259,16 @@ export function renderEnvironmentPreviewSvg(themeRaw: string | null): string {
 		`<rect class="blink" x="130" y="48" width="${S}" height="${S}" fill="#ffd84a"/>` +
 		`<text class="muted" x="12" y="110" font-size="10">streak ≥ 7 hari / antena</text>`;
 
-	const windows =
-		`<rect class="win" x="24" y="48" width="${S * 2}" height="${S * 2}" fill="${PALETTE.w}"/>` +
-		`<rect class="win on" x="56" y="48" width="${S * 2}" height="${S * 2}" fill="#3178c6"/>` +
-		`<rect class="win on" x="88" y="48" width="${S * 2}" height="${S * 2}" fill="#e34c26"/>` +
-		`<rect class="win on" x="120" y="48" width="${S * 2}" height="${S * 2}" fill="#f1e05a"/>` +
-		`<text class="muted" x="12" y="110" font-size="10">warna = primary language</text>`;
+	const logos = COMMON_LANGUAGE_LOGO_IDS.slice(0, 12)
+		.map((id, i) => {
+			const x = 14 + (i % 6) * 36;
+			const y = 34 + Math.floor(i / 6) * 40;
+			return (
+				`<g transform="translate(${x},${y})">${renderLanguageLogoSvg(id, 0, 0, 2)}` +
+				`<text class="muted" y="20" font-size="8">${escapeXml(id.slice(0, 6))}</text></g>`
+			);
+		})
+		.join("");
 
 	const paletteKeys = Object.keys(PALETTE);
 	const swatches = paletteKeys
@@ -250,7 +289,7 @@ export function renderEnvironmentPreviewSvg(themeRaw: string | null): string {
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">
 <title>Preview — Lingkungan Kota Pixel</title>
-<desc>Sky, ground, road, trees, cars, effects, windows, palette</desc>
+<desc>Sky, flora, traffic, pedestrians, logos, palette</desc>
 <style>
 ${sheetCss(theme)}
 ${CITY_ANIMATIONS_CSS}
@@ -259,14 +298,15 @@ text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 <rect class="bg" width="${width}" height="${height}"/>
 <text class="lbl" x="16" y="28" font-size="16">Lingkungan &amp; elemen kota</text>
 <text class="muted" x="16" y="46" font-size="11">Asset yang bisa ditambah/diubah di renderer &amp; palette</text>
-${panel(16, 60, 170, 120, "Langit siang", skyDay)}
-${panel(198, 60, 170, 120, "Langit malam", skyNight)}
-${panel(380, 60, 230, 120, "Tanah &amp; jalan", groundRoad)}
-${panel(16, 196, 170, 130, "Pohon", tree)}
-${panel(198, 196, 200, 130, "Mobil", cars)}
-${panel(414, 196, 200, 130, "Efek streak", fx)}
-${panel(16, 342, 200, 130, "Jendela", windows)}
-${panel(232, 342, 360, 160, "Palette (src/visual/buildings/palette.ts)", swatches)}
+${panel(16, 60, 230, 140, "Langit siang", skyDay)}
+${panel(258, 60, 230, 140, "Langit malam", skyNight)}
+${panel(500, 60, 250, 140, "Tanah &amp; jalan", groundRoad)}
+${panel(16, 216, 230, 140, "Flora", flora)}
+${panel(258, 216, 230, 140, "Lalu lintas", traffic)}
+${panel(500, 216, 250, 140, "Pejalan kaki", peds)}
+${panel(16, 372, 230, 140, "Efek streak", fx)}
+${panel(258, 372, 492, 140, "Logo bahasa umum (opsional di gedung)", logos)}
+${panel(16, 528, 734, 170, "Palette (src/visual/buildings/palette.ts)", swatches)}
 </svg>`;
 }
 

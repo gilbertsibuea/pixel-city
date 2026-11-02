@@ -73,8 +73,11 @@ describe("city mapping", () => {
 		expect(city.buildings[0]?.buildingId).toBe("stone-shop");
 		expect(city.buildings[0]?.smoke).toBe(true);
 		expect(city.buildings[0]?.flag).toBe(true);
-		expect(city.cars).toBe(3);
-		expect(city.trees).toBe(2);
+		expect(city.cars).toBe(4);
+		expect(city.buses).toBe(2);
+		expect(city.trees).toBe(3);
+		expect(city.plants).toBeGreaterThan(0);
+		expect(city.buildings[0]?.primaryLanguage).toBeNull();
 		expect(litRatioForCommits(10)).toBe(0.5);
 	});
 
@@ -90,6 +93,7 @@ describe("city mapping", () => {
 		const city = mapMetricsToCity(metrics, { limit: 18, theme: "auto" });
 		expect(city.buildings).toEqual([]);
 		expect(city.cars).toBe(0);
+		expect(city.buses).toBe(0);
 		expect(city.trees).toBe(0);
 	});
 });
@@ -103,9 +107,9 @@ describe("helpers", () => {
 
 	it("caps cars and trees", () => {
 		expect(carCountFromMergedPrs(0)).toBe(0);
-		expect(carCountFromMergedPrs(9)).toBe(3);
+		expect(carCountFromMergedPrs(9)).toBe(4);
 		expect(treeCountFromStars(0)).toBe(0);
 		expect(treeCountFromStars(3)).toBe(1);
-		expect(treeCountFromStars(999)).toBe(6);
+		expect(treeCountFromStars(999)).toBe(10);
 	});
 });
