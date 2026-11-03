@@ -8,7 +8,8 @@
     "start": "wrangler dev",
     "test": "vitest",
     "cf-typegen": "wrangler types",
-    "construction-sheet": "npx tsx scripts/dump-construction.mts public/construction-dump.json && python3 scripts/render-construction-sheet.py && npx tsx scripts/render-construction-svg.mts"
+    "construction-sheet": "npx tsx scripts/dump-construction.mts public/construction-dump.json && python3 scripts/render-construction-sheet.py && npx tsx scripts/render-construction-svg.mts",
+    "linkedin-sheet": "npx tsx scripts/render-linkedin-sheets.mts && npx tsx scripts/dump-linkedin.mts public/linkedin-dump.json && python3 scripts/render-linkedin-png.py"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.4.3",

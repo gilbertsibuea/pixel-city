@@ -16,6 +16,10 @@ import {
 	renderPreviewIndexHtml,
 	renderStagesPreviewSvg,
 } from "../renderer/previewGallery";
+import {
+	parseLinkedInTheme,
+	renderLinkedInStagesSvg,
+} from "../renderer/linkedinSheet";
 import { renderFallbackSvg } from "../fallback/renderFallback";
 import { etagFor, svgResponse } from "./response";
 
@@ -93,6 +97,11 @@ export async function handleRequest(
 
 	if (url.pathname === "/v1/preview/stages.svg") {
 		const svg = renderStagesPreviewSvg(url.searchParams.get("theme"));
+		return svgResponse(svg, { cacheSeconds: 60 });
+	}
+
+	if (url.pathname === "/v1/preview/linkedin.svg") {
+		const svg = renderLinkedInStagesSvg(parseLinkedInTheme(url.searchParams.get("theme")));
 		return svgResponse(svg, { cacheSeconds: 60 });
 	}
 

@@ -166,3 +166,4 @@ dist
 !.env.example
 .wrangler/
 construction-dump.json
+linkedin-dump.json

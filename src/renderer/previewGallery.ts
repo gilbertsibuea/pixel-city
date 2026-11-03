@@ -411,6 +411,8 @@ export function renderPreviewIndexHtml(origin: string): string {
     <div class="links">
       <a href="/v1/preview/stages.svg">Semua stage (satu SVG)</a>
       <a href="/v1/preview/environment.svg">Lingkungan</a>
+      <a href="/v1/preview/linkedin.svg?theme=light">LinkedIn sheet (light)</a>
+      <a href="/v1/preview/linkedin.svg?theme=dark">LinkedIn sheet (dark)</a>
       <a href="/v1/preview/stages.svg?theme=dark">Stages gelap</a>
       <a href="/v1/preview/environment.svg?theme=dark">Lingkungan gelap</a>
     </div>
