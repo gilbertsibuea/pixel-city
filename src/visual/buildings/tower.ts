@@ -1,7 +1,19 @@
+export interface TowerStyle {
+	/** Char for the sunlit left edge and roof ledge (default: same as frame = old look). */
+	edgeLight?: string;
+	/** Char for sparse diagonal light streaks on the wall (glass reflection). */
+	streak?: string;
+}
+
 /**
- * Generates a tower sprite grid: side walls in `frame`, windows (2 rows tall)
- * on every other column, ground-floor entrance door, optional antenna beacon.
- * Used by mid-rise and skyscraper so their proportions stay consistent.
+ * Tower sprite grid. SAME dimensions as before:
+ *   height = (antenna ? 4 : 0) + 1 + bodyHeight + 1
+ *
+ * Retouch:
+ *  - roof ledge: lit on the left, frame on the right
+ *  - left edge lit (edgeLight), right edge frame  -> one consistent light source
+ *  - window sills: frame char under every window pair (reads as floor slabs)
+ *  - optional diagonal streaks on the wall (glass reflection)
  */
 export function makeTowerRows(
 	width: number,
@@ -9,8 +21,12 @@ export function makeTowerRows(
 	wall: string,
 	frame: string,
 	antenna = false,
+	style: TowerStyle = {},
 ): string[] {
+	const edgeLight = style.edgeLight ?? frame;
+	const streak = style.streak;
 	const rows: string[] = [];
+
 	if (antenna) {
 		for (let i = 0; i < 4; i++) {
 			const r = Array<string>(width).fill(".");
@@ -18,23 +34,30 @@ export function makeTowerRows(
 			rows.push(r.join(""));
 		}
 	}
-	rows.push(frame.repeat(width)); // roof
-	const doorCol = Math.max(1, Math.floor(width / 2) - 1);
+
+	rows.push(edgeLight.repeat(width - 1) + frame); // roof ledge
+
+	const doorL = (width >> 1) - 1;
+	const doorR = width >> 1;
+
 	for (let i = 0; i < bodyHeight; i++) {
+		const lastTwo = i >= bodyHeight - 2;
+		const aboveDoorZone = i < bodyHeight - 2;
 		let r = "";
-		const nearGround = i >= bodyHeight - 2;
 		for (let j = 0; j < width; j++) {
-			const edge = j === 0 || j === width - 1;
-			if (nearGround && (j === doorCol || j === doorCol + 1)) {
-				r += "d";
-				continue;
-			}
-			const windowCell =
-				j % 2 === 1 && (i % 4 === 1 || i % 4 === 2) && i < bodyHeight - 2;
-			r += edge ? frame : windowCell ? "w" : wall;
+			let ch: string;
+			if (j === 0) ch = edgeLight;
+			else if (j === width - 1) ch = frame;
+			else if (lastTwo && (j === doorL || j === doorR)) ch = "d";
+			else if (j % 2 === 1 && (i % 4 === 1 || i % 4 === 2) && aboveDoorZone) ch = "w";
+			else if (j % 2 === 1 && i % 4 === 3 && aboveDoorZone) ch = frame; // sill
+			else if (streak && (i + j * 2) % 11 === 0) ch = streak;
+			else ch = wall;
+			r += ch;
 		}
 		rows.push(r);
 	}
+
 	rows.push(frame.repeat(width)); // base
 	return rows;
 }

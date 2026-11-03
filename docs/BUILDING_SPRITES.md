@@ -60,23 +60,32 @@ Tidak ada highlight ketiga (tidak ada “rim light” terpisah). Kontras datang 
 
 ## 2. Palette lengkap
 
-### Material bangunan
+### Material bangunan (retouch: highlight + body + shadow)
+
+Cahaya dari **kiri atas**. Tiap material punya highlight (tepi kiri / ledge), body, dan shadow (tepi kanan / fondasi). Shadow cenderung lebih cool (biru/ungu halus).
 
 | Key | Hex | Nama | Dipakai di |
 |---|---|---|---|
+| `j` | `#e6c765` | Thatch highlight | Hut — atap sisi terang |
 | `r` | `#c9a24d` | Thatch (jerami) | Hut — atap |
-| `R` | `#8a6234` | Thatch shadow | Hut — pita bayangan atap |
+| `R` | `#7b5636` | Thatch shadow | Hut — pita / sisi gelap atap |
+| `i` | `#c99a5e` | Wood highlight | Hut, rumah kayu — tepi kiri dinding |
 | `k` | `#a8794a` | Wood | Hut, rumah kayu — dinding; konstruksi timber |
-| `K` | `#7a5434` | Wood shadow | Rumah kayu — fondasi |
+| `K` | `#6b4a3a` | Wood shadow | Tepi kanan / fondasi kayu |
 | `d` | `#4a3020` | Door | Semua bangunan berpintu |
+| `u` | `#e07a5f` | Roof/awning highlight | Atap & kanopi sisi terang |
 | `o` | `#c0504a` | Roof / awning (merah bata) | Rumah kayu atap; toko kanopi |
-| `O` | `#8f3a36` | Roof shadow / chimney | Atap gelap, cerobong, atap datar toko |
+| `O` | `#7e3640` | Roof shadow / chimney | Atap gelap, cerobong |
+| `s` | `#e6e0cf` | Stone highlight | Toko — tepi kiri |
 | `t` | `#cfc8b4` | Stone | Toko batu — dinding |
-| `T` | `#9a937f` | Stone shadow | Toko — fondasi & aksen |
+| `T` | `#8d8794` | Stone shadow | Toko — tepi kanan & fondasi |
+| `h` | `#b4c2d4` | Concrete highlight | Mid-rise — tepi kiri / roof ledge |
 | `c` | `#8e9bb0` | Concrete | Mid-rise — dinding |
-| `C` | `#5d6b82` | Concrete shadow / frame | Mid-rise — tepi, roof, base |
+| `C` | `#56627c` | Concrete shadow / frame | Mid-rise — tepi kanan, sill, base |
+| `l` | `#6c86a8` | Tower glass highlight | Skyscraper/landmark — tepi kiri, streak |
 | `m` | `#3f5273` | Tower glass / body | Skyscraper, landmark |
-| `M` | `#26334a` | Tower frame | Skyscraper, landmark — tepi & spire |
+| `M` | `#232c47` | Tower frame | Skyscraper, landmark — tepi kanan & spire |
+| `B` | `#2e2a3d` | Contact shadow | Garis tanah / under eaves |
 | `w` | `#8fb4d6` | Window unlit | Semua bangunan berjendela |
 
 ### Lingkungan & kendaraan (palette bersama, bukan dinding)

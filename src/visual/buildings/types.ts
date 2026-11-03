@@ -5,6 +5,9 @@
  *   'A'  beacon  -> rendered as <rect class="blink"> (antenna light)
  *   'd'  door    -> entrance (pedestrians walk toward this)
  *   any other key of PALETTE -> solid color
+ *
+ * Material families use highlight / body / shadow (e.g. j/r/R, i/k/K, u/o/O, s/t/T, h/c/C, l/m/M).
+ * 'B' is a shared contact shadow (ground line / under eaves).
  */
 export type BuildingId =
 	| "hut"

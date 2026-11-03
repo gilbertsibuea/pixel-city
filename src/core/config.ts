@@ -1,6 +1,6 @@
 import type { BuildingId } from "../visual/buildings/types";
 
-export const RENDERER_VERSION = "v11";
+export const RENDERER_VERSION = "v12";
 
 export const DEFAULT_BUILDING_LIMIT = 18;
 export const MAX_BUILDING_LIMIT = 18;
