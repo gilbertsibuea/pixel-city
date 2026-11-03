@@ -188,25 +188,46 @@ function craneFor(id: BuildingId, width: number, phase: ConstructionPhase): Cran
 	return { mastRows: MAX_CRANE_MAST, jibLen: 5, beacon: true, mastCol: Math.min(width - 1, width - 2) };
 }
 
-function prependCrane(
+/**
+ * Paint the crane mast from `fromRow` down to the ground so the crane stands
+ * on site instead of floating above the unfinished silhouette.
+ */
+function plantMast(rows: string[], fromRow: number, mastCol: number): void {
+	const h = rows.length;
+	const w = rows[0]!.length;
+	const col = Math.min(w - 1, Math.max(0, mastCol));
+	for (let r = fromRow; r < h; r++) setCell(rows, r, col, "X");
+	// Small foot plate on the last two rows so the mast "napak" on the ground.
+	const foot = h - 1;
+	const footL = Math.max(0, col - 1);
+	const footR = Math.min(w - 1, col + 1);
+	for (const r of [foot, foot - 1]) {
+		if (r < fromRow) continue;
+		for (let c = footL; c <= footR; c++) setCell(rows, r, c, "X");
+	}
+}
+
+/**
+ * Tower crane: jib + beacon above the silhouette, mast planted to the ground.
+ * Returns rows with the overhead pad prepended; call plantMast again after any
+ * later body rewrites (mid-rise / skyscraper) so the mast is not erased.
+ */
+function applyCrane(
 	body: string[],
 	spec: CraneSpec,
-): { rows: string[]; hook: { col: number; row: number }; craneRows: number } {
+): { rows: string[]; hook: { col: number; row: number }; craneRows: number; mastCol: number } {
 	const w = body[0]!.length;
 	const mast = Math.min(MAX_CRANE_MAST, spec.mastRows);
 	const pad: string[] = [];
 	const mastCol = Math.min(w - 1, Math.max(0, spec.mastCol));
+	const dir = mastCol > w / 2 ? -1 : 1;
 
 	for (let i = 0; i < mast; i++) {
 		const cells = Array.from({ length: w }, () => ".");
-		if (i === 0 && spec.beacon) {
-			cells[mastCol] = "A";
-		} else {
-			cells[mastCol] = "X";
-		}
-		// Jib near the top of the mast
+		if (i === 0 && spec.beacon) cells[mastCol] = "A";
+		else cells[mastCol] = "X";
+		// Jib one row below the tip, reaching over the building.
 		if (i === 1) {
-			const dir = mastCol > w / 2 ? -1 : 1;
 			for (let j = 1; j <= spec.jibLen; j++) {
 				const c = mastCol + dir * j;
 				if (c < 0 || c >= w) break;
@@ -216,13 +237,17 @@ function prependCrane(
 		pad.push(cells.join(""));
 	}
 
-	const jibRow = 1;
-	const dir = mastCol > w / 2 ? -1 : 1;
-	const hookCol = Math.max(0, Math.min(w - 1, mastCol + dir * Math.max(1, Math.floor(spec.jibLen / 2))));
+	const rows = [...pad, ...body];
+	plantMast(rows, 0, mastCol);
+	const hookCol = Math.max(
+		0,
+		Math.min(w - 1, mastCol + dir * Math.max(1, Math.floor(spec.jibLen / 2))),
+	);
 	return {
-		rows: [...pad, ...body],
-		hook: { col: hookCol, row: jibRow },
+		rows,
+		hook: { col: hookCol, row: 1 },
 		craneRows: pad.length,
+		mastCol,
 	};
 }
 
@@ -248,7 +273,7 @@ function genericConstruction(finished: BuildingSprite, phase: ConstructionPhase)
 			craneRows: 0,
 		};
 	}
-	const withCrane = prependCrane(out, crane);
+	const withCrane = applyCrane(out, crane);
 	const shiftedScaffold = scaffoldRows.map((r) => r + withCrane.craneRows);
 	return {
 		rows: withCrane.rows,
@@ -397,6 +422,8 @@ function midriseConstruction(finished: BuildingSprite, phase: ConstructionPhase)
 		base.rows[r] = line.join("");
 	}
 
+	const crane = craneFor(finished.id, base.width, phase);
+	if (crane) plantMast(base.rows, 0, crane.mastCol);
 	return base;
 }
 
@@ -424,7 +451,8 @@ function skyscraperConstruction(finished: BuildingSprite, phase: ConstructionPha
 		base.rows[r] = line.join("");
 	}
 
-	// Built band keeps glazed look from finished (m/M/w)
+	const crane = craneFor(finished.id, base.width, phase);
+	if (crane) plantMast(base.rows, 0, crane.mastCol);
 	return base;
 }
 
@@ -487,7 +515,7 @@ function landmarkConstruction(finished: BuildingSprite, phase: ConstructionPhase
 
 	const scaffoldRows = applyScaffold(out, builtFrom, h);
 	const crane = craneFor("landmark", w, phase)!;
-	const withCrane = prependCrane(out, crane);
+	const withCrane = applyCrane(out, crane);
 	return {
 		rows: withCrane.rows,
 		width: w,
