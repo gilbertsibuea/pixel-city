@@ -180,10 +180,33 @@ function placeCloud(
 	day: boolean,
 	ceilingY: number,
 	flip = false,
+	avoid?: Zone,
 ): string {
 	const ph = CLOUD_SPECS[variant]!.h * S;
 	const topMax = Math.max(2, ceilingY - ph);
-	return cloudAt(x, clamp(y, 2, topMax), variant, cls, delay, opacity, day, flip);
+	const px = avoid ? dodgeZone(x, CLOUD_SPECS[variant]!.w * S, cls, avoid) : x;
+	return cloudAt(px, clamp(y, 2, topMax), variant, cls, delay, opacity, day, flip);
+}
+
+/** Horizontal band kept clear of clouds (sun / moon incl. their drift). */
+interface Zone {
+	x0: number;
+	x1: number;
+}
+
+/** Drift range of each cloud class, matching cloud-drift / cloud-drift-slow keyframes. */
+const CLOUD_DRIFT: Record<string, [number, number]> = {
+	cloud: [0, 40],
+	"cloud-alt": [-32, 0],
+};
+
+/** Slide a cloud to whichever side of the zone is nearer so it never sweeps across it. */
+function dodgeZone(x: number, w: number, cls: string, zone: Zone): number {
+	const [dMin, dMax] = CLOUD_DRIFT[cls] ?? [0, 0];
+	if (x + w + dMax <= zone.x0 || x + dMin >= zone.x1) return x;
+	const left = zone.x0 - w - dMax;
+	const right = zone.x1 - dMin;
+	return Math.abs(left - x) <= Math.abs(right - x) ? left : right;
 }
 
 /** Hard ceiling for cloud bottoms: upper ~38% of the sky above ground. */
@@ -242,28 +265,175 @@ function balloons(width: number, peakY: number, maxY: number): string {
 	return specs.map(([x, y, c, d]) => balloonAt(x, y, c, d)).join("");
 }
 
-/** Back clouds stay in the upper sky so mountains remain visible below. */
-function backClouds(width: number, groundY: number, day: boolean): string {
+/**
+ * Back clouds in the upper sky. Day: keep clear of the sun on the left.
+ * Night: keep clear of the moon on the right (including its westward drift).
+ */
+function backClouds(width: number, groundY: number, day: boolean, avoid: Zone): string {
 	const f = (r: number) => Math.floor(width * r);
 	const ceiling = cloudCeilingY(groundY);
 	return [
-		placeCloud(f(0.02), 4, 0, "cloud", 0, 0.88, day, ceiling),
-		placeCloud(f(0.3), 8, 2, "cloud-alt", 2, 0.86, day, ceiling),
-		placeCloud(f(0.58), 2, 1, "cloud", 4, 0.88, day, ceiling, true),
-		placeCloud(f(0.82), 10, 3, "cloud-alt", 1, 0.84, day, ceiling),
-		placeCloud(f(0.08), 6, 4, "cloud-alt", 3, 0.72, day, ceiling),
-		placeCloud(f(0.64), 12, 5, "cloud", 5, 0.7, day, ceiling),
+		placeCloud(f(0.02), 4, 0, "cloud", 0, 0.88, day, ceiling, false, avoid),
+		placeCloud(f(0.3), 8, 2, "cloud-alt", 2, 0.86, day, ceiling, false, avoid),
+		placeCloud(f(0.58), 2, 1, "cloud", 4, 0.88, day, ceiling, true, avoid),
+		placeCloud(f(0.82), 10, 3, "cloud-alt", 1, 0.84, day, ceiling, false, avoid),
+		placeCloud(f(0.08), 6, 4, "cloud-alt", 3, 0.72, day, ceiling, false, avoid),
+		placeCloud(f(0.64), 12, 5, "cloud", 5, 0.7, day, ceiling, false, avoid),
 	].join("");
 }
 
 /** Front layer: thin wisps only, high up — never big banks over rooftops. */
-function frontClouds(width: number, groundY: number, day: boolean): string {
+function frontClouds(width: number, groundY: number, day: boolean, avoid: Zone): string {
 	const f = (r: number) => Math.floor(width * r);
 	const ceiling = Math.min(cloudCeilingY(groundY), Math.floor(groundY * 0.28));
 	return [
-		placeCloud(f(0.18), 6, 4, "cloud", 1, 0.65, day, ceiling),
-		placeCloud(f(0.55), 10, 5, "cloud-alt", 2.5, 0.62, day, ceiling, true),
+		placeCloud(f(0.18), 6, 4, "cloud", 1, 0.65, day, ceiling, false, avoid),
+		placeCloud(f(0.55), 10, 5, "cloud-alt", 2.5, 0.62, day, ceiling, true, avoid),
 	].join("");
+}
+
+/* ------------------------------------------------------------------ */
+/* Sun & moon: same cell grid + 5-tone shading as the clouds            */
+/* ------------------------------------------------------------------ */
+
+type Grid = number[][];
+
+const emptyGrid = (n: number): Grid => Array.from({ length: n }, () => Array<number>(n).fill(-1));
+
+/** 0..4 body tones lit from the upper-left, with a light checker dither like the clouds. */
+function shadeBody(nx: number, ny: number, x: number, y: number): number {
+	const d2 = Math.min(1, nx * nx + ny * ny);
+	let L = -nx * 0.4 - ny * 0.55 + 0.7 * (1 - d2) - 0.2;
+	L += (x & 1) ^ (y & 1) ? 0.03 : -0.03;
+	return L > 0.6 ? 0 : L > 0.2 ? 1 : L > -0.25 ? 2 : L > -0.6 ? 3 : 4;
+}
+
+/** Rounded pixel halo around `body` cells: solid ring, then an optional checker-dithered ring. */
+function addHalo(grid: Grid, body: (x: number, y: number) => boolean, inner: number, outer = -1): void {
+	const n = grid.length;
+	for (let y = 0; y < n; y++) {
+		for (let x = 0; x < n; x++) {
+			if (grid[y]![x]! >= 0) continue;
+			let near = 9;
+			for (let dy = -3; dy <= 3; dy++) {
+				for (let dx = -3; dx <= 3; dx++) {
+					if (body(x + dx, y + dy)) near = Math.min(near, Math.hypot(dx, dy));
+				}
+			}
+			if (near <= 1.5) grid[y]![x] = inner;
+			else if (outer >= 0 && near <= 2.3 && ((x + y) & 1) === 0) grid[y]![x] = outer;
+		}
+	}
+}
+
+const SUN_N = 19;
+const SUN_R = 4.6;
+/** Tones: 0–4 disk, 5 ray, 6 ray tip, 7 halo. */
+const SUN_COLORS = ["#fffbe0", "#ffe878", "#ffd23f", "#f7a92b", "#e2842a", "#ffc93c", "#ffe58a", "#fff1b0"];
+const SUN_OPACITY = [1, 1, 1, 1, 1, 1, 1, 0.9];
+
+function genSun(): Grid {
+	const n = SUN_N;
+	const c = (n - 1) / 2;
+	const grid = emptyGrid(n);
+	const inDisk = (x: number, y: number) => Math.hypot(x - c, y - c) <= SUN_R;
+
+	for (let y = 0; y < n; y++) {
+		for (let x = 0; x < n; x++) {
+			if (!inDisk(x, y)) continue;
+			grid[y]![x] = shadeBody((x - c) / SUN_R, (y - c) / SUN_R, x, y);
+		}
+	}
+	addHalo(grid, inDisk, 7);
+
+	// 16 rays: long on the axes, medium on diagonals, single-pixel nubs in between.
+	const ray = (deg: number, from: number, to: number) => {
+		const a = (deg * Math.PI) / 180;
+		for (let t = from; t <= to; t++) {
+			const x = Math.round(c + t * Math.cos(a));
+			const y = Math.round(c + t * Math.sin(a));
+			if (grid[y]?.[x] === undefined) continue;
+			grid[y]![x] = t === to ? 6 : 5;
+		}
+	};
+	for (let i = 0; i < 16; i++) {
+		const deg = i * 22.5;
+		if (i % 4 === 0) ray(deg, 7, 9);
+		else if (i % 2 === 0) ray(deg, 7, 8);
+		else ray(deg, 7, 7);
+	}
+	return grid;
+}
+
+const MOON_N = 15;
+const MOON_R = 5.8;
+/** Tones: 0–4 lit crescent, 5 crater, 6 halo, 7 dithered halo. */
+const MOON_COLORS = ["#fffbe8", "#f4edc8", "#ddd2a2", "#b8ad80", "#958b66", "#c9be8e", "#2b3768", "#212a54"];
+const MOON_OPACITY = [1, 1, 1, 1, 1, 1, 1, 1];
+
+function genMoon(): Grid {
+	const n = MOON_N;
+	const c = (n - 1) / 2;
+	const cutX = c + 3.2;
+	const cutY = c - 2;
+	const cutR = 4.6;
+	const grid = emptyGrid(n);
+	const inMoon = (x: number, y: number) =>
+		Math.hypot(x - c, y - c) <= MOON_R && Math.hypot(x - cutX, y - cutY) > cutR;
+
+	for (let y = 0; y < n; y++) {
+		for (let x = 0; x < n; x++) {
+			if (!inMoon(x, y)) continue;
+			// Distance past the shadow edge: thin near the terminator, fullest along the outer rim.
+			const s = Math.hypot(x - cutX, y - cutY) - cutR;
+			let tone = shadeBody((x - c) / MOON_R, (y - c) / MOON_R, x, y);
+			if (s < 0.9) tone = Math.max(tone, 3);
+			else if (s < 1.7) tone = Math.max(tone, 2);
+			grid[y]![x] = tone;
+		}
+	}
+	for (const [x, y] of [
+		[3, 8],
+		[4, 10],
+		[6, 12],
+		[2, 6],
+	] as const) {
+		if (grid[y]![x]! >= 0 && grid[y]![x]! <= 2) grid[y]![x] = 5;
+	}
+	addHalo(grid, inMoon, 6, 7);
+	return grid;
+}
+
+const sunPaths = gridToPaths(genSun(), SUN_COLORS.length, S, 0, 0);
+const moonPaths = gridToPaths(genMoon(), MOON_COLORS.length, S, 0, 0);
+
+function paintTones(paths: string[], colors: string[], opacity: number[], cls: (t: number) => string): string {
+	return paths
+		.map((d, t) => {
+			if (!d) return "";
+			const op = opacity[t]! < 1 ? ` opacity="${opacity[t]}"` : "";
+			const c = cls(t);
+			return `<path${c ? ` class="${c}"` : ""} d="${d}" fill="none" stroke="${colors[t]}" stroke-width="${S}"${op}/>`;
+		})
+		.join("");
+}
+
+function renderSun(celestialY: number): string {
+	return (
+		`<g transform="translate(10,${Math.max(2, celestialY - 8)})">` +
+		`<g class="sun">` +
+		paintTones(sunPaths, SUN_COLORS, SUN_OPACITY, (t) => (t === 6 ? "sun-glint" : "")) +
+		`</g></g>`
+	);
+}
+
+function renderMoon(moonX: number, celestialY: number): string {
+	return (
+		`<g transform="translate(${moonX},${Math.max(2, celestialY - 4)})">` +
+		`<g class="moon">` +
+		paintTones(moonPaths, MOON_COLORS, MOON_OPACITY, () => "") +
+		`</g></g>`
+	);
 }
 
 /* ------------------------------------------------------------------ */
@@ -325,44 +495,31 @@ export function renderSkyDecor(options: SkyDecorOptions): string {
 	const maxY = Math.max(20, groundY - 28);
 	const celestialY = clampSkyY(10, Math.min(18, Math.max(10, Math.floor(maxY * 0.08))));
 
-	const sun =
-		`<g transform="translate(26,${celestialY})">` +
-		`<g class="sun">` +
-		`<circle cx="10" cy="10" r="10" fill="${PALETTE.y}"/>` +
-		`<rect x="8" y="-8" width="4" height="4" fill="${PALETTE.y}" opacity="0.7"/>` +
-		`<rect x="8" y="24" width="4" height="4" fill="${PALETTE.y}" opacity="0.7"/>` +
-		`<rect x="-8" y="8" width="4" height="4" fill="${PALETTE.y}" opacity="0.7"/>` +
-		`<rect x="24" y="8" width="4" height="4" fill="${PALETTE.y}" opacity="0.7"/>` +
-		`</g></g>`;
+	const moonX = Math.max(100, width - 72);
+	// Sun/moon footprints widened by their drift keyframes (sun +22px, moon -36px).
+	const sunZone: Zone = { x0: 4, x1: 10 + SUN_N * S + 26 };
+	const moonZone: Zone = { x0: moonX - 40, x1: moonX + MOON_N * S + 4 };
 
-	const moonX = Math.max(80, width - 56);
-	const moon =
-		`<g transform="translate(${moonX},${celestialY})">` +
-		`<g class="moon">` +
-		`<circle cx="10" cy="10" r="10" fill="${PALETTE.f}"/>` +
-		`<circle cx="16" cy="6" r="8" fill="#0d1428"/>` +
-		`</g></g>`;
-
-	// Depth: mountains on the horizon, then upper-sky clouds (never burying peaks).
+	// Depth: mountains → clouds → celestial last so sun/moon are never veiled.
 	const backDay =
-		sun +
 		renderMountains(width, groundY, true) +
-		backClouds(width, groundY, true) +
-		birdAt(40, clampSkyY(Math.min(py + 20, cloudCeilingY(groundY) - 4), maxY - 10), 0) +
+		backClouds(width, groundY, true, sunZone) +
+		birdAt(130, clampSkyY(Math.min(py + 20, cloudCeilingY(groundY) - 4), maxY - 10), 0) +
 		birdAt(Math.floor(width * 0.3), clampSkyY(Math.min(py + 14, cloudCeilingY(groundY)), maxY - 10), 3) +
 		birdAt(Math.floor(width * 0.55), clampSkyY(Math.min(py + 8, cloudCeilingY(groundY)), maxY - 10), 6) +
-		balloons(width, Math.min(py, cloudCeilingY(groundY)), maxY);
+		balloons(width, Math.min(py, cloudCeilingY(groundY)), maxY) +
+		renderSun(celestialY);
 
 	const backNight =
-		moon +
 		stars(width, Math.max(16, Math.floor(width / 24)), cloudCeilingY(groundY)) +
 		renderMountains(width, groundY, false) +
-		backClouds(width, groundY, false) +
+		backClouds(width, groundY, false, moonZone) +
 		balloonAt(Math.floor(width * 0.5), clampSkyY(28, maxY - 8), "#7eb6ff", 1) +
-		balloonAt(Math.floor(width * 0.58), clampSkyY(34, maxY - 8), "#c9a24d", 4);
+		balloonAt(Math.floor(width * 0.58), clampSkyY(34, maxY - 8), "#c9a24d", 4) +
+		renderMoon(moonX, celestialY);
 
-	const frontDay = frontClouds(width, groundY, true);
-	const frontNight = frontClouds(width, groundY, false);
+	const frontDay = frontClouds(width, groundY, true, sunZone);
+	const frontNight = frontClouds(width, groundY, false, moonZone);
 
 	if (layer === "back") return renderMountainDefs(width, groundY) + themed(theme, backDay, backNight);
 	if (layer === "front") return themed(theme, frontDay, frontNight);

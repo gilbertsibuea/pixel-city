@@ -5,11 +5,15 @@ export function cityAnimationsCss(driveEndPx: number): string {
   0%, 100% { transform: translate(0px, 0px); }
   50% { transform: translate(22px, 6px); }
 }
-/* Westward drift (to the left), stay high in the sky. */
+/* Short westward drift — stay in the clear right sky so clouds never cover the moon. */
 @keyframes moon-drift {
   0% { transform: translate(0px, 0px); }
-  50% { transform: translate(-36px, 2px); }
-  100% { transform: translate(-72px, 4px); }
+  50% { transform: translate(-18px, 2px); }
+  100% { transform: translate(-36px, 3px); }
+}
+@keyframes sun-glint {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
 }
 @keyframes cloud-drift {
   0% { transform: translateX(0); }
@@ -67,6 +71,7 @@ export function cityAnimationsCss(driveEndPx: number): string {
 
 .sun { animation: sun-drift 24s steps(6) infinite; }
 .moon { animation: moon-drift 48s steps(12) infinite alternate; }
+.sun-glint { animation: sun-glint 2.4s steps(2) infinite; }
 .cloud { animation: cloud-drift 36s steps(12) infinite alternate; }
 .cloud-alt { animation: cloud-drift-slow 42s steps(14) infinite alternate; }
 .bird { animation: bird-fly 16s steps(16) infinite; }
@@ -81,7 +86,7 @@ export function cityAnimationsCss(driveEndPx: number): string {
 .flag { animation: flag-wave 1.2s steps(2) infinite; transform-box: fill-box; transform-origin: left center; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sun, .moon, .cloud, .cloud-alt, .bird, .star, .balloon, .win.on, .blink,
+  .sun, .sun-glint, .moon, .cloud, .cloud-alt, .bird, .star, .balloon, .win.on, .blink,
   .vehicle, .tree-top, .smoke, .flag, .pedestrian,
   .builder-hammer .builder-arm, .builder-carry, .builder-spark, .hook { animation: none !important; }
 }
