@@ -43,12 +43,12 @@ const PADDING_X = 16;
 const PADDING_TOP = 8;
 const GAP = 8;
 /**
- * GitHub README scales by the SVG width/height attributes.
- * Composition keeps a minimum sky band (like stages preview) so short cities
- * aren't a flat ribbon; display size is then upscaled for README readability.
+ * Fixed README frame. GitHub sizes the image from width/height attributes;
+ * taller skylines zoom out inside this box instead of stretching the README.
  */
-const DISPLAY_TARGET_WIDTH = 920;
-const DISPLAY_MIN_HEIGHT = 280;
+const README_FRAME_W = 920;
+const README_FRAME_H = 427;
+const README_ASPECT = README_FRAME_W / README_FRAME_H;
 /** Minimum full city height in viewBox units (sky + buildings + ground + road). */
 const MIN_COMPOSITION_H = 260;
 
@@ -270,7 +270,7 @@ function placeBuildings(model: CityModel): {
 		x += sprite.width * SCALE + gap;
 	}
 
-	const width = Math.max(x + PADDING_X, 360);
+	const width = Math.max(x + PADDING_X, 360, model.minWidth ?? 0);
 	return { placed, width, height, groundY, roadY };
 }
 
@@ -278,21 +278,43 @@ function skyPeakFallback(groundY: number): number {
 	return Math.max(PADDING_TOP, Math.floor(groundY * 0.35));
 }
 
-function displaySize(width: number, height: number): { outW: number; outH: number } {
-	const scale = Math.max(
-		1,
-		DISPLAY_TARGET_WIDTH / width,
-		DISPLAY_MIN_HEIGHT / height,
-	);
+/**
+ * Pad the content viewBox to the fixed README aspect so width/height attrs
+ * stay 920×427. Extra room becomes sky (top) or empty street (sides) — the
+ * city zooms out instead of growing the README frame.
+ */
+function fitReadmeFrame(
+	contentW: number,
+	contentH: number,
+): { vbW: number; vbH: number; padX: number; padY: number; outW: number; outH: number } {
+	let vbW = Math.max(1, contentW);
+	let vbH = Math.max(1, contentH);
+	if (vbW / vbH < README_ASPECT) {
+		vbW = Math.ceil(vbH * README_ASPECT);
+	} else {
+		vbH = Math.ceil(vbW / README_ASPECT);
+	}
 	return {
-		outW: Math.round(width * scale),
-		outH: Math.round(height * scale),
+		vbW,
+		vbH,
+		padX: Math.floor((vbW - contentW) / 2),
+		padY: vbH - contentH, // keep the road on the bottom edge
+		outW: README_FRAME_W,
+		outH: README_FRAME_H,
 	};
 }
 
 export function renderCitySvg(model: CityModel): string {
-	const { placed, width, height, groundY, roadY } = placeBuildings(model);
-	const { outW, outH } = displaySize(width, height);
+	const content = placeBuildings(model);
+	const frame = fitReadmeFrame(content.width, content.height);
+	const { outW, outH, vbW: width, vbH: height, padX, padY } = frame;
+	const groundY = content.groundY + padY;
+	const roadY = content.roadY + padY;
+	const placed = content.placed.map((p) => ({
+		...p,
+		x: p.x + padX,
+		y: p.y + padY,
+	}));
 	const user = escapeXml(model.username);
 	const staleNote = model.stale ? " (cached)" : "";
 

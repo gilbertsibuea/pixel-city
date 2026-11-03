@@ -1,12 +1,16 @@
 # Pixel Cityscape
-<img src="https://pixel-city.2217051118.workers.dev/v1/city/gilbertsibuea.svg" width="100%" alt="Kota Pixel" />
+
+<img src="https://pixel-city.2217051118.workers.dev/v1/city/gilbertsibuea.svg?theme=dark" width="100%" alt="Pixel Cityscape" />
+
 Dynamic SVG API that renders a pixel-art city from a developer's **public** GitHub activity. One embed — no Actions, no user tokens.
 
+## Add to your README
+
 ```html
-<img src="https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg" width="100%" alt="Pixel Cityscape" />
+<img src="https://pixel-city.2217051118.workers.dev/v1/city/<GITHUB_USERNAME>.svg?theme=dark" width="80%" alt="Pixel Cityscape" />
 ```
 
-The SVG is scaled for README readability (tight viewBox on the skyline, ~900px display width).
+Replace `<GITHUB_USERNAME>` with your GitHub username. Use `?theme=dark` for GitHub’s dark UI (recommended), or `?theme=light` / omit for `auto`.
 
 ## Endpoint
 
@@ -62,4 +66,4 @@ npm test
 | 100–199 | Skyscraper |
 | 200+ | Landmark |
 
-Sprites live under `src/visual/buildings` (from `docs/building`).
+Sprites live under `src/visual/buildings`.

@@ -53,6 +53,11 @@ export interface CityModel {
 	stale?: boolean;
 	/** When true, draw repo/stage captions under each building (preview). */
 	showBuildingLabels?: boolean;
+	/**
+	 * Minimum viewBox width. Pads empty ground/sky on the right so a short
+	 * skyline (e.g. stages preview) upscales like a full README city (~560).
+	 */
+	minWidth?: number;
 }
 
 export type FetchMetricsResult =
