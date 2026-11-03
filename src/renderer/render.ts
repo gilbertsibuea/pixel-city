@@ -408,7 +408,7 @@ ${builderAnimationsCss()}
 ${pedestrianKeyframes(pedPlans)}
 text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
-${renderSkyBackground(width, height)}
+${renderSkyBackground(width, roadY + ROAD_H)}
 ${renderSkyDecor({
 	width,
 	theme: model.theme,
