@@ -4,6 +4,9 @@ import {
 	builderAnimationsCss,
 	cityAnimationsCss,
 	constructionForTarget,
+	GROUND_H,
+	groundCss,
+	groundThemeCss,
 	PALETTE,
 	planBuilders,
 	renderBuilder,
@@ -12,12 +15,17 @@ import {
 	renderCar,
 	renderCraneHook,
 	renderFlower,
+	renderGround,
 	renderLanguageLogoCentered,
 	renderPedestrian,
+	renderRoad,
 	renderSkyBackground,
 	renderSkyDecor,
 	renderSkyDefs,
 	renderTree,
+	ROAD_H,
+	roadCss,
+	roadThemeCss,
 	pedestriansForStage,
 	planPedestriansForBuilding,
 	planStreetWanderers,
@@ -33,8 +41,6 @@ const SCALE = 4;
 const PADDING_X = 16;
 /** Keep small so tall peaks sit inside the cloud band (not below an empty sky). */
 const PADDING_TOP = 8;
-const GROUND_H = 24;
-const ROAD_H = 16;
 const GAP = 8;
 /**
  * GitHub README scales by the SVG width/height attributes.
@@ -78,23 +84,19 @@ function visualForBuilding(building: CityBuilding): {
 }
 
 function themeCss(theme: CityModel["theme"]): string {
-	const light = `
-.ground { fill: #5a8f45; }
-.road { fill: #4a4a52; }
-.road-line { fill: #d4d4d8; }
-.lbl { fill: #1f2933; }
-`;
-	const dark = `
-.ground { fill: #2f4a2a; }
-.road { fill: #2a2a32; }
-.road-line { fill: #6a6a72; }
-.lbl { fill: #e8eef6; }
-`;
-	if (theme === "light") return light;
-	if (theme === "dark") return dark;
-	return `${light}
+	const labelLight = `.lbl { fill: #1f2933; }`;
+	const labelDark = `.lbl { fill: #e8eef6; }`;
+	if (theme === "light") {
+		return groundThemeCss("light") + roadThemeCss("light") + labelLight;
+	}
+	if (theme === "dark") {
+		return groundThemeCss("dark") + roadThemeCss("dark") + labelDark;
+	}
+	return `${labelLight}
+${groundCss()}
+${roadCss()}
 @media (prefers-color-scheme: dark) {
-${dark}
+${labelDark}
 }`;
 }
 
@@ -414,11 +416,8 @@ ${renderSkyDecor({
 	groundY,
 	layer: "back",
 })}
-<rect class="ground" x="0" y="${groundY}" width="${width}" height="${GROUND_H}"/>
-<rect class="road" x="0" y="${roadY}" width="${width}" height="${ROAD_H}"/>
-${Array.from({ length: Math.ceil(width / 24) }, (_, i) =>
-	`<rect class="road-line" x="${8 + i * 24}" y="${roadY + 6}" width="10" height="2"/>`,
-).join("")}
+${renderGround(width, groundY)}
+${renderRoad(width, roadY)}
 ${flora.join("")}
 ${buildingsSvg}
 ${renderSkyDecor({

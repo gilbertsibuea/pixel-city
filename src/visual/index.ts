@@ -41,6 +41,8 @@ export {
 	COMMON_LANGUAGE_LOGO_IDS,
 } from "./languageLogos";
 export { renderTree, renderBush, renderFlower } from "./flora";
+export { GROUND_H, groundCss, groundThemeCss, renderGround } from "./ground";
+export { ROAD_H, roadCss, roadThemeCss, renderRoad } from "./road";
 export { renderCar, renderBus } from "./vehicles";
 export {
 	pedestriansForStage,
