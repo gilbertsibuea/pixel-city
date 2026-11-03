@@ -397,8 +397,8 @@ export function renderCitySvg(model: CityModel): string {
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" viewBox="0 0 ${width} ${height}" role="img">
-<title>Kota Pixel — ${user}</title>
-<desc>Pixel city of public GitHub activity for ${user}${staleNote}. Buildings represent repositories; window lights show recent commits.</desc>
+<title>Pixel Cityscape — ${user}</title>
+<desc>Pixel Cityscape of public GitHub activity for ${user}${staleNote}. Buildings represent repositories; window lights show recent commits.</desc>
 ${renderSkyDefs()}
 <style>
 ${themeCss(model.theme)}

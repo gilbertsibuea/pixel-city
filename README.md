@@ -1,15 +1,15 @@
-# Kota Pixel
+# Pixel Cityscape
 
 Dynamic SVG API that renders a pixel-art city from a developer's **public** GitHub activity. One Markdown line — no Actions, no user tokens.
 
 ```markdown
-![Kota Pixel](https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg)
+![Pixel Cityscape](https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg)
 ```
 
 SVG sudah di-scale agar enak dibaca di README (viewBox rapat ke skyline, lebar tampilan ~900px). Opsional:
 
 ```html
-<img src="https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg" width="100%" alt="Kota Pixel" />
+<img src="https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg" width="100%" alt="Pixel Cityscape" />
 ```
 
 ## Endpoint

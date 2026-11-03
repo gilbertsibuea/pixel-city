@@ -137,7 +137,7 @@ def render(theme: str) -> Path:
     except Exception:
         font_lg = font = font_sm = ImageFont.load_default()
 
-    draw.text((PAD, PAD + 8), "Kota Pixel", fill=C["title"], font=font_lg)
+    draw.text((PAD, PAD + 8), "Pixel Cityscape", fill=C["title"], font=font_lg)
     draw.text((PAD, PAD + 42), "Semua tahap bangunan — finished & under construction", fill=C["sub"], font=font)
     chip = [W - PAD - 92, PAD + 16, W - PAD, PAD + 44]
     draw.rounded_rectangle(chip, radius=6, fill=C["chip"])

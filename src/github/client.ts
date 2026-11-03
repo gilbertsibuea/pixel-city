@@ -70,7 +70,7 @@ export async function fetchCityMetrics(
 			headers: {
 				Authorization: `Bearer ${token}`,
 				"Content-Type": "application/json",
-				"User-Agent": "kota-pixel-worker",
+				"User-Agent": "pixel-cityscape-worker",
 				Accept: "application/json",
 			},
 			body: JSON.stringify({

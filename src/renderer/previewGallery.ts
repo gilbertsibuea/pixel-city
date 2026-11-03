@@ -292,7 +292,7 @@ export function renderEnvironmentPreviewSvg(themeRaw: string | null): string {
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">
-<title>Preview — Lingkungan Kota Pixel</title>
+<title>Preview — Lingkungan Pixel Cityscape</title>
 <desc>Sky, flora, traffic, pedestrians, logos, palette</desc>
 <style>
 ${sheetCss(theme)}
@@ -334,7 +334,7 @@ export function renderPreviewIndexHtml(origin: string): string {
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Kota Pixel — Preview Gallery</title>
+  <title>Pixel Cityscape — Preview Gallery</title>
   <style>
     :root {
       --bg: #eef3f8;
@@ -406,7 +406,7 @@ export function renderPreviewIndexHtml(origin: string): string {
 </head>
 <body>
   <main>
-    <h1>Kota Pixel — Preview Gallery</h1>
+    <h1>Pixel Cityscape — Preview Gallery</h1>
     <p class="lead">Lihat tiap bangunan dan elemen lingkungan sebelum menambah asset baru. Ubah sprite di <code>src/visual/buildings/</code>, palette di <code>palette.ts</code>, efek kota di <code>src/renderer/render.ts</code>.</p>
     <div class="links">
       <a href="/v1/preview/stages.svg">Semua stage (satu SVG)</a>
@@ -431,9 +431,9 @@ export function renderPreviewIndexHtml(origin: string): string {
       </a>
     </div>
 
-    <h2>Kota lengkap (semua stage)</h2>
+    <h2>Pixel Cityscape lengkap (semua stage)</h2>
     <div class="wide card">
-      <h3>Komposisi kota</h3>
+      <h3>Komposisi cityscape</h3>
       <p class="meta">Endpoint: <code>/v1/preview/stages.svg</code></p>
       <a href="/v1/preview/stages.svg" target="_blank" rel="noopener">
         <img src="/v1/preview/stages.svg" alt="All stages city preview"/>

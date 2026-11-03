@@ -1,9 +1,9 @@
-# PRD — Kota Pixel: Dynamic SVG API
+# PRD — Pixel Cityscape: Dynamic SVG API
 
 **Versi:** 2.0  
 **Tanggal:** 2 November 2026  
 **Status:** Draft untuk implementasi MVP  
-**Produk:** Kota Pixel  
+**Produk:** Pixel Cityscape  
 **Platform target:** GitHub Profile README  
 **Model distribusi MVP:** Public HTTP API yang menghasilkan SVG secara dinamis
 
@@ -11,29 +11,29 @@
 
 ## 1. Ringkasan Produk
 
-Kota Pixel adalah layanan yang menghasilkan gambar SVG kota pixel-art berdasarkan aktivitas publik GitHub seorang developer. Setiap repository ditampilkan sebagai bangunan. Aktivitas commit menentukan tahap bangunan, bahasa pemrograman memengaruhi warna jendela, dan aktivitas lain ditampilkan melalui elemen kota seperti lampu, asap cerobong, mobil, dan pohon.
+Pixel Cityscape adalah layanan yang menghasilkan gambar SVG pixel-art berdasarkan aktivitas publik GitHub seorang developer. Setiap repository ditampilkan sebagai bangunan. Aktivitas commit menentukan tahap bangunan, bahasa pemrograman memengaruhi warna jendela, dan aktivitas lain ditampilkan melalui elemen kota seperti lampu, asap cerobong, mobil, dan pohon.
 
-Pada versi produk baru, Kota Pixel **tidak mengharuskan pengguna memasang GitHub Actions, menjalankan script, atau melakukan deployment sendiri**. Pengguna cukup menambahkan satu URL gambar ke `README.md` profil GitHub.
+Pada versi produk baru, Pixel Cityscape **tidak mengharuskan pengguna memasang GitHub Actions, menjalankan script, atau melakukan deployment sendiri**. Pengguna cukup menambahkan satu URL gambar ke `README.md` profil GitHub.
 
 Contoh pemasangan:
 
 ```markdown
-![Kota Pixel](https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg)
+![Pixel Cityscape](https://<API-DOMAIN>/v1/city/<GITHUB_USERNAME>.svg)
 ```
 
-Saat gambar diminta, API Kota Pixel mengambil atau membaca cache statistik publik GitHub, memetakan statistik tersebut ke model kota, lalu mengembalikan SVG.
+Saat gambar diminta, API Pixel Cityscape mengambil atau membaca cache statistik publik GitHub, memetakan statistik tersebut ke model kota, lalu mengembalikan SVG.
 
 ### Perubahan utama dari PRD sebelumnya
 
 | Aspek | PRD sebelumnya | PRD baru |
 |---|---|---|
-| Cara menjalankan | GitHub Actions di repository pengguna | API ter-host milik Kota Pixel |
+| Cara menjalankan | GitHub Actions di repository pengguna | API ter-host milik Pixel Cityscape |
 | Cara memasang | Menyalin workflow dan Markdown | Satu baris Markdown |
 | Output | `city.svg` di-commit ke repository pengguna | SVG dikirim sebagai HTTP response |
 | Penjadwalan | Cron GitHub Actions | On-demand dengan cache; tidak membutuhkan scheduler untuk MVP |
-| Data GitHub | `GITHUB_TOKEN` milik workflow pengguna | Token layanan Kota Pixel untuk membaca data publik |
+| Data GitHub | `GITHUB_TOKEN` milik workflow pengguna | Token layanan Pixel Cityscape untuk membaca data publik |
 | Hosting | Tidak ada backend | Cloudflare Workers + Workers KV/cache |
-| Pengguna perlu mengelola token | Tidak untuk public repo | Tidak; token layanan dikelola oleh operator Kota Pixel |
+| Pengguna perlu mengelola token | Tidak untuk public repo | Tidak; token layanan dikelola oleh operator Pixel Cityscape |
 
 ---
 
@@ -47,7 +47,7 @@ Membuat developer dapat menampilkan representasi visual aktivitas GitHub mereka 
 
 Saat ini, developer yang ingin menampilkan visualisasi aktivitas GitHub di README sering harus memasang workflow, mengatur token, atau meng-host hasil gambar sendiri. Proses tersebut menambah hambatan, terutama bagi pengguna yang hanya ingin memasang satu visual di profil.
 
-Kota Pixel mengurangi proses tersebut menjadi satu tindakan: menempelkan URL gambar.
+Pixel Cityscape mengurangi proses tersebut menjadi satu tindakan: menempelkan URL gambar.
 
 ### Prinsip produk
 
@@ -56,7 +56,7 @@ Kota Pixel mengurangi proses tersebut menjadi satu tindakan: menempelkan URL gam
 3. **Public-data-only MVP:** hanya membaca data GitHub yang tersedia secara publik.
 4. **Design-first continuity:** desain kota yang sudah ada dipertahankan; pekerjaan MVP adalah mengintegrasikan desain tersebut ke generator API, bukan membuat desain baru.
 5. **Cache by default:** request gambar tidak boleh selalu menghasilkan request baru ke GitHub GraphQL API.
-6. **Graceful degradation:** ketika GitHub API bermasalah, Kota Pixel sebisa mungkin menampilkan hasil cache terakhir.
+6. **Graceful degradation:** ketika GitHub API bermasalah, Pixel Cityscape sebisa mungkin menampilkan hasil cache terakhir.
 
 ---
 
@@ -98,7 +98,7 @@ Developer yang memiliki akun GitHub dan ingin mempercantik profile README menggu
 
 ### User stories
 
-- Sebagai developer, saya ingin menambahkan kota pixel ke README hanya dengan satu baris Markdown.
+- Sebagai developer, saya ingin menambahkan Pixel Cityscape ke README hanya dengan satu baris Markdown.
 - Sebagai developer, saya ingin kota saya merepresentasikan repository publik yang paling aktif.
 - Sebagai developer, saya ingin kota tetap tampil meskipun GitHub API sedang mengalami gangguan sementara.
 - Sebagai pengunjung profil, saya ingin memahami repository dan aktivitas developer melalui visual kota.
@@ -153,16 +153,16 @@ GitHub mendokumentasikan dukungan tampilan SVG, tetapi menyatakan bahwa SVG yang
 
 ### 6.1 Alur pemasangan
 
-1. Pengguna membuka dokumentasi Kota Pixel.
+1. Pengguna membuka dokumentasi Pixel Cityscape.
 2. Pengguna memasukkan username GitHub pada contoh URL atau menyalin Markdown dengan mengganti placeholder username.
 3. Pengguna menempelkan Markdown ke profile `README.md` (`username/username`).
 4. Pengguna menyimpan perubahan.
-5. GitHub meminta SVG dari endpoint Kota Pixel dan menampilkan gambar di README.
+5. GitHub meminta SVG dari endpoint Pixel Cityscape dan menampilkan gambar di README.
 
 ### 6.2 Contoh Markdown
 
 ```markdown
-![Kota Pixel](https://<API-DOMAIN>/v1/city/gilbertsibuea.svg)
+![Pixel Cityscape](https://<API-DOMAIN>/v1/city/gilbertsibuea.svg)
 ```
 
 ### 6.3 Prinsip UX
@@ -358,7 +358,7 @@ Nama dan pembagian file dapat disesuaikan ketika mengintegrasikan prototipe yang
 
 ### 9.4 Catatan akurasi
 
-GitHub contribution data bukan selalu identik dengan seluruh commit yang ada pada repository. Kota Pixel harus menyebut angka tersebut sebagai kontribusi commit pengguna, bukan total commit proyek. Kontribusi privat tidak termasuk dalam MVP.
+GitHub contribution data bukan selalu identik dengan seluruh commit yang ada pada repository. Pixel Cityscape harus menyebut angka tersebut sebagai kontribusi commit pengguna, bukan total commit proyek. Kontribusi privat tidak termasuk dalam MVP.
 
 Query GraphQL wajib meminta field minimum yang dibutuhkan, membatasi jumlah node, menggunakan pagination saat diperlukan, dan membaca metadata rate limit. Implementasi tidak boleh melakukan query satu-per-satu untuk setiap bangunan apabila satu query terencana dapat mengambil data yang sama.
 
@@ -366,7 +366,7 @@ Query GraphQL wajib meminta field minimum yang dibutuhkan, membatasi jumlah node
 
 GraphQL API memerlukan autentikasi. Untuk MVP one-line installation:
 
-- Gunakan token layanan milik operator Kota Pixel untuk membaca data publik.
+- Gunakan token layanan milik operator Pixel Cityscape untuk membaca data publik.
 - Utamakan fine-grained Personal Access Token dengan akses minimum yang diperlukan untuk public data.
 - Simpan token sebagai Cloudflare Worker Secret; jangan pernah commit ke repository atau mengembalikannya ke client.
 - Jangan meminta token dari pengguna.
@@ -545,7 +545,7 @@ MVP dinyatakan siap rilis ketika seluruh kondisi berikut terpenuhi:
 | 5. Cloudflare deployment | Konfigurasi Worker, secret, dan KV binding | API staging |
 | 6. Cache and resilience | Edge cache, KV TTL, stale fallback, rate limiting | Endpoint tahan terhadap request berulang dan upstream failure |
 | 7. GitHub README compatibility | Uji gambar sungguhan pada profile README | Keputusan kompatibilitas SVG/animasi |
-| 8. Public MVP | Dokumentasi, contoh Markdown, monitoring, dan release | Kota Pixel dapat dipasang publik |
+| 8. Public MVP | Dokumentasi, contoh Markdown, monitoring, dan release | Pixel Cityscape dapat dipasang publik |
 
 ### Prioritas belajar/pengerjaan
 
@@ -571,8 +571,8 @@ Urutan implementasi sebaiknya tidak dimulai dari Cloudflare. Pastikan renderer d
 
 ## 17. Keputusan Produk yang Dikunci untuk MVP
 
-1. Kota Pixel didistribusikan sebagai **Dynamic SVG API**, bukan GitHub Action.
-2. Pengguna memasang Kota Pixel melalui satu URL gambar pada README.
+1. Pixel Cityscape didistribusikan sebagai **Dynamic SVG API**, bukan GitHub Action.
+2. Pengguna memasang Pixel Cityscape melalui satu URL gambar pada README.
 3. Pengguna tidak perlu menambahkan token atau memasang GitHub App.
 4. MVP hanya membaca data publik.
 5. Cloudflare Workers menjadi runtime API awal; Workers KV dan edge response cache digunakan untuk mengurangi request upstream.
@@ -612,4 +612,4 @@ Dokumentasi resmi yang menjadi acuan awal. Batas dan perilaku layanan harus dipe
 
 ---
 
-**Arah akhir MVP:** Kota Pixel harus terasa seperti layanan gambar siap pakai. Developer cukup memasang satu URL di README; semua pengambilan data publik, pemetaan statistik, rendering, dan cache dikelola oleh layanan Kota Pixel.
+**Arah akhir MVP:** Pixel Cityscape harus terasa seperti layanan gambar siap pakai. Developer cukup memasang satu URL di README; semua pengambilan data publik, pemetaan statistik, rendering, dan cache dikelola oleh layanan Pixel Cityscape.

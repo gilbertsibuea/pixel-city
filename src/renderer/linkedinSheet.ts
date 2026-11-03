@@ -157,7 +157,7 @@ export function renderLinkedInStagesSvg(theme: LinkedInTheme = "light"): string 
 	const H = PAD + HEADER_H + gridH + FOOTER_H + PAD;
 
 	let body = "";
-	body += `<text x="${PAD}" y="${PAD + 30}" fill="${C.title}" font-size="28" font-weight="700">Kota Pixel</text>`;
+	body += `<text x="${PAD}" y="${PAD + 30}" fill="${C.title}" font-size="28" font-weight="700">Pixel Cityscape</text>`;
 	body += `<text x="${PAD}" y="${PAD + 54}" fill="${C.sub}" font-size="14">Semua tahap bangunan — finished &amp; under construction</text>`;
 	body += `<rect x="${W - PAD - 92}" y="${PAD + 16}" width="92" height="28" rx="6" fill="${C.chip}"/>`;
 	body += `<text x="${W - PAD - 46}" y="${PAD + 35}" text-anchor="middle" fill="${C.chipText}" font-size="13" font-weight="700">${theme.toUpperCase()}</text>`;
@@ -227,8 +227,8 @@ export function renderLinkedInStagesSvg(theme: LinkedInTheme = "light"): string 
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">
-<title>Kota Pixel — stages (${theme})</title>
-<desc>All Kota Pixel building stages: finished and under construction (${theme} mode).</desc>
+<title>Pixel Cityscape — stages (${theme})</title>
+<desc>All Pixel Cityscape building stages: finished and under construction (${theme} mode).</desc>
 <style>
 text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 ${builderAnimationsCss()}

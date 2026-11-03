@@ -1,4 +1,4 @@
-# Kota Pixel — Building Sprite Guide
+# Pixel Cityscape — Building Sprite Guide
 
 Dokumentasi lengkap gaya visual, shading, dan palette untuk seluruh sprite bangunan di `src/visual/buildings/`.
 
@@ -35,7 +35,7 @@ Sumber kebenaran kode:
 
 ### Pola shading (konvensi)
 
-Kota Pixel memakai **dua tingkat** per material:
+Pixel Cityscape memakai **dua tingkat** per material:
 
 1. **Body / light** — huruf kecil (`r`, `k`, `t`, `c`, `m`, …)
 2. **Shadow / frame** — huruf kapital pasangan (`R`, `K`, `T`, `C`, `M`, …)

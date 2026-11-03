@@ -73,7 +73,7 @@ export async function handleRequest(
 	if (url.pathname === "/health") {
 		return new Response(
 			JSON.stringify({
-				name: "Kota Pixel",
+				name: "Pixel Cityscape",
 				endpoint: "/v1/city/{username}.svg",
 				preview: "/preview",
 				ok: true,
@@ -253,7 +253,7 @@ export async function handleRequest(
 	const response = svgResponse(svg, {
 		cacheSeconds: stale ? 60 : SVG_CACHE_TTL_SECONDS,
 		etag,
-		extraHeaders: stale ? { "X-Kota-Pixel-Stale": "1" } : undefined,
+		extraHeaders: stale ? { "X-Pixel-Cityscape-Stale": "1" } : undefined,
 	});
 
 	if (!stale) {

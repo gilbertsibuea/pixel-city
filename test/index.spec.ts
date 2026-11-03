@@ -9,7 +9,7 @@ import worker from "../src/index";
 
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 
-describe("Kota Pixel worker", () => {
+describe("Pixel Cityscape worker", () => {
 	it("serves health JSON", async () => {
 		const request = new IncomingRequest("http://example.com/health");
 		const ctx = createExecutionContext();
