@@ -51,3 +51,4 @@ export {
 } from "./pedestrians";
 export type { PedestrianPlan } from "./pedestrians";
 export { renderSkyDecor, renderSkyDefs, renderSkyBackground } from "./sky";
+export { renderMountains, renderMountainDefs } from "./mountains";

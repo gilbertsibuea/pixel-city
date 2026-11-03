@@ -1,29 +1,194 @@
 import { PALETTE } from "./buildings/palette";
+import { renderMountainDefs, renderMountains } from "./mountains";
+import {
+	SKY_CELL as S,
+	clamp,
+	gridToPaths,
+	mulberry32,
+	strokeUse,
+} from "./skyShared";
 
-const S = 4;
+/* ------------------------------------------------------------------ */
+/* Clouds: big, lobed, shaded cumulus + thin wisps                      */
+/* ------------------------------------------------------------------ */
 
-/**
- * Outer <g transform> sets world position; inner animated class only uses
- * relative CSS transforms so attribute translate is not overwritten.
- */
+const CLOUD_TONES = 5; // 0 highlight, 1 light, 2 mid, 3 shadow, 4 deep shadow
+
+interface Lobe {
+	cx: number;
+	cy: number;
+	rx: number;
+	ry: number;
+}
+
+function genCumulus(seed: number, W: number, H: number): number[][] {
+	const rnd = mulberry32(seed);
+	const yb = H - 3; // flat base line
+	let lobes: Lobe[] = [];
+	const n = Math.max(4, Math.round(W / 11));
+	for (let i = 0; i < n; i++) {
+		const t = (i + 0.5) / n;
+		const env = Math.pow(Math.sin(Math.PI * t), 0.8);
+		const ry = H * (0.2 + 0.34 * env) * (0.8 + 0.4 * rnd());
+		const rx = ry * (1.15 + 0.6 * rnd()) + W * 0.03;
+		const cx = W * (0.07 + 0.86 * t) + (rnd() - 0.5) * W * 0.04;
+		const cy = yb - ry * (0.5 + 0.3 * rnd());
+		lobes.push({ cx, cy, rx, ry });
+		if (env > 0.5) {
+			const r2 = ry * (0.5 + 0.25 * rnd());
+			lobes.push({
+				cx: cx + (rnd() - 0.4) * rx * 0.8,
+				cy: cy - ry * (0.55 + 0.2 * rnd()),
+				rx: r2 * (1.1 + 0.4 * rnd()),
+				ry: r2,
+			});
+		}
+	}
+	// Keep the whole cloud inside the grid: compress vertically if the top overflows.
+	const minTop = Math.min(...lobes.map((l) => l.cy - l.ry));
+	if (minTop < 0.5) {
+		const k = (yb - 0.5) / (yb - minTop);
+		lobes = lobes.map((l) => ({ ...l, cy: yb - (yb - l.cy) * k, ry: l.ry * k }));
+	}
+
+	const lobesByHeight = [...lobes].sort((a, b) => a.cy - b.cy);
+	const mask: boolean[][] = Array.from({ length: H }, () => Array<boolean>(W).fill(false));
+	const light: number[][] = Array.from({ length: H }, () => Array<number>(W).fill(-9));
+	for (let y = 0; y < H; y++) {
+		for (let x = 0; x < W; x++) {
+			const px = x + 0.5;
+			const py = y + 0.5;
+			const lift = 3.5 * Math.pow(1 - Math.sin((Math.PI * px) / W), 1.4);
+			if (py > yb + 1 - lift) continue;
+			for (const l of lobesByHeight) {
+				const nx = (px - l.cx) / l.rx;
+				const ny = (py - l.cy) / l.ry;
+				if (nx * nx + ny * ny <= 1) {
+					mask[y]![x] = true;
+					light[y]![x] = -ny * 0.78 - nx * 0.28 + 0.4;
+					break;
+				}
+			}
+		}
+	}
+	for (let y = 0; y < H; y++) {
+		for (let x = 0; x < W; x++) {
+			if (!mask[y]![x]) continue;
+			const nb =
+				(mask[y - 1]?.[x] ? 1 : 0) +
+				(mask[y + 1]?.[x] ? 1 : 0) +
+				(mask[y]![x - 1] ? 1 : 0) +
+				(mask[y]![x + 1] ? 1 : 0);
+			if (nb < 2) mask[y]![x] = false;
+		}
+	}
+
+	const grid: number[][] = Array.from({ length: H }, () => Array<number>(W).fill(-1));
+	for (let y = 0; y < H; y++) {
+		for (let x = 0; x < W; x++) {
+			if (!mask[y]![x]) continue;
+			let L = light[y]![x]!;
+			L -= 0.4 * Math.max(0, (y + 0.5 - H * 0.4) / (H * 0.6));
+			L += (x & 1) ^ (y & 1) ? 0.035 : -0.035;
+			let tone = L > 0.78 ? 0 : L > 0.46 ? 1 : L > 0.14 ? 2 : L > -0.2 ? 3 : 4;
+			if (!mask[y - 1]?.[x] && tone > 1) tone = 1;
+			grid[y]![x] = tone;
+		}
+	}
+	return grid;
+}
+
+function genWisp(seed: number, W: number, H: number): number[][] {
+	const rnd = mulberry32(seed);
+	const grid: number[][] = Array.from({ length: H }, () => Array<number>(W).fill(-1));
+	for (let y = 0; y < H; y++) {
+		const mid = 1 - Math.abs(y - (H - 1) / 2) / (H / 2 + 0.5);
+		let x = Math.floor(rnd() * W * 0.2) + y * 2;
+		while (x < W) {
+			const len = Math.max(3, Math.floor((0.12 + 0.45 * rnd()) * W * (0.4 + 0.6 * mid)));
+			const tone = y < H / 2 ? 0 : rnd() < 0.5 ? 1 : 2;
+			for (let i = 0; i < len && x + i < W; i++) {
+				const edge = Math.min(i, len - 1 - i);
+				if (edge === 0 && rnd() < 0.5) continue;
+				grid[y]![x + i] = tone;
+			}
+			x += len + 2 + Math.floor(rnd() * 9);
+		}
+	}
+	return grid;
+}
+
+interface CloudSpec {
+	seed: number;
+	w: number;
+	h: number;
+	wisp?: boolean;
+}
+
+/** Slightly shorter cumulus so the upper sky band can hold them above mountains. */
+const CLOUD_SPECS: CloudSpec[] = [
+	{ seed: 11, w: 64, h: 20 },
+	{ seed: 23, w: 52, h: 16 },
+	{ seed: 37, w: 72, h: 18 },
+	{ seed: 5, w: 40, h: 14 },
+	{ seed: 7, w: 72, h: 5, wisp: true },
+	{ seed: 19, w: 56, h: 4, wisp: true },
+];
+
+const cloudPaths: string[][] = CLOUD_SPECS.map((s) =>
+	gridToPaths(s.wisp ? genWisp(s.seed, s.w, s.h) : genCumulus(s.seed, s.w, s.h), CLOUD_TONES, S, 0, 0),
+);
+
+const CLOUD_DAY = ["#ffffff", "#f1f6fd", "#d3e0f4", "#adc0e8", "#8ea3d6"];
+const CLOUD_NIGHT = ["#bcc6f0", "#98a4d8", "#7581bb", "#59639c", "#454d85"];
+
 function cloudAt(
 	x: number,
 	y: number,
-	scale = 1,
-	cls = "cloud",
-	delay = 0,
-	opacity = 0.92,
+	variant: number,
+	cls: string,
+	delay: number,
+	opacity: number,
+	day: boolean,
+	flip = false,
 ): string {
-	const w = Math.max(S * 4, Math.round(S * 6 * scale));
+	const spec = CLOUD_SPECS[variant]!;
+	const pw = spec.w * S;
+	const pal = day ? CLOUD_DAY : CLOUD_NIGHT;
 	const delayStyle = delay ? ` style="animation-delay:${delay}s"` : "";
+	const uses = pal
+		.map((c, t) => (cloudPaths[variant]![t] ? strokeUse(`c${variant}t${t}`, c) : ""))
+		.join("");
+	const inner = flip ? `<g transform="translate(${pw},0) scale(-1,1)">${uses}</g>` : `<g>${uses}</g>`;
 	return (
 		`<g transform="translate(${x},${y})">` +
-		`<g class="${cls}"${delayStyle} opacity="${opacity}">` +
-		`<rect x="0" y="${S}" width="${w}" height="${S * 2}" fill="${PALETTE.q}"/>` +
-		`<rect x="${S}" y="0" width="${Math.max(S, w - S * 2)}" height="${S * 2}" fill="${PALETTE.q}"/>` +
-		`<rect x="${S * 2}" y="${-S}" width="${Math.max(S, w - S * 4)}" height="${S}" fill="${PALETTE.q}" opacity="0.85"/>` +
-		`</g></g>`
+		`<g class="${cls}"${delayStyle} opacity="${opacity}">${inner}</g></g>`
 	);
+}
+
+/**
+ * Place a cloud so its bottom stays at or above `ceilingY` (upper sky only).
+ * This keeps the mountain silhouette clear on the horizon.
+ */
+function placeCloud(
+	x: number,
+	y: number,
+	variant: number,
+	cls: string,
+	delay: number,
+	opacity: number,
+	day: boolean,
+	ceilingY: number,
+	flip = false,
+): string {
+	const ph = CLOUD_SPECS[variant]!.h * S;
+	const topMax = Math.max(2, ceilingY - ph);
+	return cloudAt(x, clamp(y, 2, topMax), variant, cls, delay, opacity, day, flip);
+}
+
+/** Hard ceiling for cloud bottoms: upper ~38% of the sky above ground. */
+function cloudCeilingY(groundY: number): number {
+	return Math.max(36, Math.floor(groundY * 0.38));
 }
 
 function clampSkyY(y: number, maxY: number): number {
@@ -67,7 +232,7 @@ function balloonAt(x: number, y: number, color: string, delay: number): string {
 
 function balloons(width: number, peakY: number, maxY: number): string {
 	const mid = Math.floor(width * 0.5);
-	const y0 = clampSkyY(peakY + 24, maxY - 8);
+	const y0 = clampSkyY(Math.min(peakY + 24, maxY * 0.35), maxY - 8);
 	const specs: Array<[number, number, string, number]> = [
 		[mid - 10, y0, "#d94f4f", 0],
 		[mid + 18, clampSkyY(y0 + 6, maxY - 8), "#4a7fc0", 2.5],
@@ -77,45 +242,42 @@ function balloons(width: number, peakY: number, maxY: number): string {
 	return specs.map(([x, y, c, d]) => balloonAt(x, y, c, d)).join("");
 }
 
-/** Clouds behind towers — kept strictly above the ground line. */
-function backClouds(width: number, peakY: number, maxY: number): string {
+/** Back clouds stay in the upper sky so mountains remain visible below. */
+function backClouds(width: number, groundY: number, day: boolean): string {
+	const f = (r: number) => Math.floor(width * r);
+	const ceiling = cloudCeilingY(groundY);
 	return [
-		cloudAt(18, clampSkyY(peakY - 6, maxY), 1.0, "cloud", 0, 0.88),
-		cloudAt(Math.floor(width * 0.3), clampSkyY(peakY - 10, maxY), 1.25, "cloud-alt", 2, 0.85),
-		cloudAt(Math.floor(width * 0.58), clampSkyY(peakY - 4, maxY), 0.95, "cloud", 4, 0.9),
-		cloudAt(Math.floor(width * 0.82), clampSkyY(peakY - 8, maxY), 1.1, "cloud-alt", 1, 0.86),
-		cloudAt(40, clampSkyY(peakY + 14, maxY), 1.15, "cloud-alt", 3, 0.8),
-		cloudAt(Math.floor(width * 0.45), clampSkyY(peakY + 18, maxY), 1.0, "cloud", 5, 0.82),
+		placeCloud(f(0.02), 4, 0, "cloud", 0, 0.88, day, ceiling),
+		placeCloud(f(0.3), 8, 2, "cloud-alt", 2, 0.86, day, ceiling),
+		placeCloud(f(0.58), 2, 1, "cloud", 4, 0.88, day, ceiling, true),
+		placeCloud(f(0.82), 10, 3, "cloud-alt", 1, 0.84, day, ceiling),
+		placeCloud(f(0.08), 6, 4, "cloud-alt", 3, 0.72, day, ceiling),
+		placeCloud(f(0.64), 12, 5, "cloud", 5, 0.7, day, ceiling),
 	].join("");
 }
 
-/**
- * Front clouds (over peaks). On short skylines, stay in the upper sky only —
- * never spill onto grass/road.
- */
-function frontClouds(width: number, peakY: number, maxY: number): string {
-	const skyDepth = maxY - peakY;
-	if (skyDepth < 36) {
-		// Shallow sky: a couple of soft clouds near the top, not deep offsets.
-		return [
-			cloudAt(Math.floor(width * 0.2), clampSkyY(8, maxY), 1.0, "cloud", 1, 0.75),
-			cloudAt(Math.floor(width * 0.55), clampSkyY(14, maxY), 1.15, "cloud-alt", 2.5, 0.72),
-			cloudAt(Math.floor(width * 0.8), clampSkyY(10, maxY), 0.9, "cloud", 4, 0.7),
-		].join("");
-	}
-
-	const softMax = Math.min(maxY, peakY + Math.floor(skyDepth * 0.55));
+/** Front layer: thin wisps only, high up — never big banks over rooftops. */
+function frontClouds(width: number, groundY: number, day: boolean): string {
+	const f = (r: number) => Math.floor(width * r);
+	const ceiling = Math.min(cloudCeilingY(groundY), Math.floor(groundY * 0.28));
 	return [
-		cloudAt(8, clampSkyY(peakY + 8, softMax), 1.05, "cloud", 1.2, 0.78),
-		cloudAt(Math.floor(width * 0.22), clampSkyY(peakY + 16, softMax), 1.2, "cloud-alt", 2.8, 0.8),
-		cloudAt(Math.floor(width * 0.48), clampSkyY(peakY + 6, softMax), 0.9, "cloud", 0.6, 0.75),
-		cloudAt(Math.floor(width * 0.7), clampSkyY(peakY + 20, softMax), 1.3, "cloud-alt", 4.2, 0.82),
-		cloudAt(Math.floor(width * 0.88), clampSkyY(peakY + 12, softMax), 0.85, "cloud", 3.1, 0.77),
+		placeCloud(f(0.18), 6, 4, "cloud", 1, 0.65, day, ceiling),
+		placeCloud(f(0.55), 10, 5, "cloud-alt", 2.5, 0.62, day, ceiling, true),
 	].join("");
 }
 
-/** SVG defs for morning/night sky gradients. */
+/* ------------------------------------------------------------------ */
+/* Public API                                                           */
+/* ------------------------------------------------------------------ */
+
+/** SVG defs: sky gradients + cloud geometry (emitted once per document). */
 export function renderSkyDefs(): string {
+	let clouds = "";
+	cloudPaths.forEach((paths, v) =>
+		paths.forEach((d, t) => {
+			if (d) clouds += `<path id="c${v}t${t}" d="${d}"/>`;
+		}),
+	);
 	return `<defs>
   <linearGradient id="sky-day" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%" stop-color="#5aa0de"/>
@@ -129,6 +291,7 @@ export function renderSkyDefs(): string {
     <stop offset="75%" stop-color="#2a1f45"/>
     <stop offset="100%" stop-color="#4a2f55"/>
   </linearGradient>
+  ${clouds}
 </defs>`;
 }
 
@@ -144,25 +307,22 @@ export interface SkyDecorOptions {
 	theme: "auto" | "light" | "dark";
 	/** Top Y of the tallest building. */
 	peakY: number;
-	/** Ground/grass top — clouds must stay above this. */
+	/** Ground/grass top: mountains sit on this; clouds stay well above. */
 	groundY: number;
 	/** `back` behind buildings, `front` overlapping peaks, `all` for standalone previews. */
 	layer?: "back" | "front" | "all";
 }
 
-function wrapTheme(theme: SkyDecorOptions["theme"], day: string, night: string): string {
-	if (theme === "light") return day.replace(/class="light-only"/g, 'class="sky-layer"');
-	if (theme === "dark") return night.replace(/class="dark-only"/g, 'class="sky-layer"');
-	return day + night;
+function themed(theme: SkyDecorOptions["theme"], day: string, night: string): string {
+	if (theme === "light") return `<g class="sky-layer">${day}</g>`;
+	if (theme === "dark") return `<g class="sky-layer">${night}</g>`;
+	return `<g class="light-only">${day}</g><g class="dark-only">${night}</g>`;
 }
 
 export function renderSkyDecor(options: SkyDecorOptions): string {
 	const { width, theme, peakY, groundY, layer = "all" } = options;
 	const py = Math.max(2, peakY);
-	/** Leave room above grass so clouds never sit on the road. */
 	const maxY = Math.max(20, groundY - 28);
-
-	/** Always near the top of the sky — never tied to short building peaks. */
 	const celestialY = clampSkyY(10, Math.min(18, Math.max(10, Math.floor(maxY * 0.08))));
 
 	const sun =
@@ -183,29 +343,28 @@ export function renderSkyDecor(options: SkyDecorOptions): string {
 		`<circle cx="16" cy="6" r="8" fill="#0d1428"/>` +
 		`</g></g>`;
 
+	// Depth: mountains on the horizon, then upper-sky clouds (never burying peaks).
 	const backDay =
-		`<g class="light-only">` +
 		sun +
-		backClouds(width, py, maxY) +
-		birdAt(40, clampSkyY(py + 20, maxY - 10), 0) +
-		birdAt(Math.floor(width * 0.3), clampSkyY(py + 14, maxY - 10), 3) +
-		birdAt(Math.floor(width * 0.55), clampSkyY(py + 8, maxY - 10), 6) +
-		balloons(width, py, maxY) +
-		`</g>`;
+		renderMountains(width, groundY, true) +
+		backClouds(width, groundY, true) +
+		birdAt(40, clampSkyY(Math.min(py + 20, cloudCeilingY(groundY) - 4), maxY - 10), 0) +
+		birdAt(Math.floor(width * 0.3), clampSkyY(Math.min(py + 14, cloudCeilingY(groundY)), maxY - 10), 3) +
+		birdAt(Math.floor(width * 0.55), clampSkyY(Math.min(py + 8, cloudCeilingY(groundY)), maxY - 10), 6) +
+		balloons(width, Math.min(py, cloudCeilingY(groundY)), maxY);
 
 	const backNight =
-		`<g class="dark-only">` +
 		moon +
-		stars(width, Math.max(16, Math.floor(width / 24)), maxY) +
-		backClouds(width, py, maxY) +
-		balloonAt(Math.floor(width * 0.5), clampSkyY(py + 28, maxY - 8), "#7eb6ff", 1) +
-		balloonAt(Math.floor(width * 0.58), clampSkyY(py + 34, maxY - 8), "#c9a24d", 4) +
-		`</g>`;
+		stars(width, Math.max(16, Math.floor(width / 24)), cloudCeilingY(groundY)) +
+		renderMountains(width, groundY, false) +
+		backClouds(width, groundY, false) +
+		balloonAt(Math.floor(width * 0.5), clampSkyY(28, maxY - 8), "#7eb6ff", 1) +
+		balloonAt(Math.floor(width * 0.58), clampSkyY(34, maxY - 8), "#c9a24d", 4);
 
-	const frontDay = `<g class="light-only">${frontClouds(width, py, maxY)}</g>`;
-	const frontNight = `<g class="dark-only">${frontClouds(width, py, maxY)}</g>`;
+	const frontDay = frontClouds(width, groundY, true);
+	const frontNight = frontClouds(width, groundY, false);
 
-	if (layer === "back") return wrapTheme(theme, backDay, backNight);
-	if (layer === "front") return wrapTheme(theme, frontDay, frontNight);
-	return wrapTheme(theme, backDay + frontDay, backNight + frontNight);
+	if (layer === "back") return renderMountainDefs(width, groundY) + themed(theme, backDay, backNight);
+	if (layer === "front") return themed(theme, frontDay, frontNight);
+	return renderMountainDefs(width, groundY) + themed(theme, backDay + frontDay, backNight + frontNight);
 }

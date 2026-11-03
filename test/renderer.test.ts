@@ -51,7 +51,8 @@ describe("renderCitySvg", () => {
 		expect(svg).toContain('class="vehicle"');
 		expect(svg).toContain("pedestrian");
 		expect(svg).toContain("lang-logo");
-		expect(new TextEncoder().encode(svg).byteLength).toBeLessThan(100_000);
+		// Path-encoded clouds + parallax mountains add weight; keep a soft README budget.
+		expect(new TextEncoder().encode(svg).byteLength).toBeLessThan(120_000);
 		expect(svg).toContain("prefers-reduced-motion");
 	});
 
