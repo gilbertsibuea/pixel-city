@@ -41,6 +41,22 @@ export const PALETTE: Readonly<Record<string, string>> = {
 	// Shared contact shadow (NEW): ground line, under eaves
 	B: "#2e2a3d",
 
+	// Deep / outline tone per material (selective outline on the shadow side)
+	J: "#5a3c26", // thatch
+	I: "#4b3226", // wood
+	U: "#5b2634", // roof tile / awning
+	S: "#66606f", // stone
+	G: "#3b4560", // concrete
+	N: "#161c31", // glass tower
+
+	// Trim & details
+	W: "#eef1f4", // window sill / white trim / awning stripe
+	D: "#7c5233", // door frame
+	L: "#a9c3e0", // glass glint (brightest reflection)
+	v: "#6fae55", // planter leaf highlight
+	p: "#3d6b2e", // planter leaf shadow
+	a: "#c3cddb", // lobby glass / light stone accent
+
 	// Windows (unlit day)
 	w: "#8fb4d6",
 

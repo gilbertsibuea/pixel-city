@@ -55,7 +55,7 @@ function solidBounds(row: string): { left: number; right: number } | null {
 }
 
 function isRoofChar(ch: string): boolean {
-	return ch === "r" || ch === "R" || ch === "o" || ch === "O";
+	return ch === "r" || ch === "R" || ch === "o" || ch === "O" || ch === "u" || ch === "U";
 }
 
 function isAwningRow(row: string): boolean {
@@ -110,7 +110,7 @@ function fillBuilt(
 	for (let r = fromRow; r < toRow; r++) {
 		const src = finished[r]!;
 		if (opts.dropAwning && isAwningRow(src)) {
-			out[r] = src.replace(/[oO]/g, ".");
+			out[r] = src.replace(/[oOuUW]/g, ".");
 			continue;
 		}
 		let line = "";

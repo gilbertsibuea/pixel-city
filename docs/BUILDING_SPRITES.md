@@ -47,7 +47,7 @@ Shadow dipakai untuk:
 - **Tepi tower**: kolom kiri–kanan + roof/base strip
 - **Cerobong / aksen**: `O` lebih gelap dari `o`
 
-Tidak ada highlight ketiga (tidak ada “rim light” terpisah). Kontras datang dari pasangan light/shadow + jendela `w`.
+Tiap material juga punya **deep / outline tone** (`J I U S G N`) untuk selective outline di sisi bayangan (kanan & bawah), plus detail bersama: `W` sill / trim putih, `D` kusen pintu, `L` glint kaca, `a` kaca lobby, `v`/`p` tanaman pot.
 
 ### Windows & lighting runtime
 
@@ -87,6 +87,17 @@ Cahaya dari **kiri atas**. Tiap material punya highlight (tepi kiri / ledge), bo
 | `M` | `#232c47` | Tower frame | Skyscraper, landmark — tepi kanan & spire |
 | `B` | `#2e2a3d` | Contact shadow | Garis tanah / under eaves |
 | `w` | `#8fb4d6` | Window unlit | Semua bangunan berjendela |
+| `J` | `#5a3c26` | Thatch deep | Hut — fringe / outline atap |
+| `I` | `#4b3226` | Wood deep | Fondasi & tepi kanan kayu |
+| `U` | `#5b2634` | Roof deep | Eave, cerobong, ujung kanopi |
+| `S` | `#66606f` | Stone deep | Tepi kanan & fondasi toko |
+| `G` | `#3b4560` | Concrete deep | Outline kanan mid-rise, kanopi lobby |
+| `N` | `#161c31` | Glass deep | Outline kanan tower & landmark |
+| `W` | `#eef1f4` | Trim putih | Sill jendela, garis kanopi |
+| `D` | `#7c5233` | Door frame | Kusen pintu / shutter |
+| `L` | `#a9c3e0` | Glass glint | Inti pantulan diagonal kaca |
+| `a` | `#c3cddb` | Lobby glass | Kaca lobby / trim terang |
+| `v` / `p` | `#6fae55` / `#3d6b2e` | Planter | Tanaman pot di depan toko/lobby |
 
 ### Lingkungan & kendaraan (palette bersama, bukan dinding)
 
@@ -234,7 +245,7 @@ rrrRRRRRRrrr
 
 | | |
 |---|---|
-| Ukuran | **14 × 28** (`makeTowerRows(14, 26, "c", "C")`) |
+| Ukuran | **14 × 28** (`makeMidriseRows()` di `midrise.ts`) |
 | Mood | Kantor/apartemen beton modern |
 | Material | Concrete `c`, frame `C`, pintu `d`, jendela `w` |
 | Fitur ekstra | `flag: true` — bendera atap saat streak |
@@ -263,7 +274,7 @@ rrrRRRRRRrrr
 
 | | |
 |---|---|
-| Ukuran | **12 × 46** (`makeTowerRows(12, 40, "m", "M", true)`) |
+| Ukuran | **12 × 46** (`makeSkyscraperRows()` di `skyscraper.ts`, pantulan via `glassAt` di `tower.ts`) |
 | Mood | Tower kaca gelap, antena |
 | Material | Glass body `m`, frame `M`, door `d`, beacon `A` |
 | Fitur ekstra | Antena 4 baris + `A` berkedip di puncak |

@@ -1,63 +1,27 @@
-export interface TowerStyle {
-	/** Char for the sunlit left edge and roof ledge (default: same as frame = old look). */
-	edgeLight?: string;
-	/** Char for sparse diagonal light streaks on the wall (glass reflection). */
-	streak?: string;
-}
+/**
+ * Shared helpers for the tall sprites (mid-rise, skyscraper, landmark).
+ * Light comes from the upper-left: lit left edge, deep outline on the right.
+ */
 
 /**
- * Tower sprite grid. SAME dimensions as before:
- *   height = (antenna ? 4 : 0) + 1 + bodyHeight + 1
- *
- * Retouch:
- *  - roof ledge: lit on the left, frame on the right
- *  - left edge lit (edgeLight), right edge frame  -> one consistent light source
- *  - window sills: frame char under every window pair (reads as floor slabs)
- *  - optional diagonal streaks on the wall (glass reflection)
+ * Diagonal sky reflection across a glass facade (only replaces body `m` cells).
+ * Returns the glass char for (row, col): `L` glint core, `l` soft band, else `m`.
  */
-export function makeTowerRows(
-	width: number,
-	bodyHeight: number,
-	wall: string,
-	frame: string,
-	antenna = false,
-	style: TowerStyle = {},
-): string[] {
-	const edgeLight = style.edgeLight ?? frame;
-	const streak = style.streak;
-	const rows: string[] = [];
+export function glassAt(row: number, col: number, period = 23): string {
+	const k = (((row + col * 2) % period) + period) % period;
+	if (k === 0) return "L";
+	if (k <= 2) return "l";
+	return "m";
+}
 
-	if (antenna) {
-		for (let i = 0; i < 4; i++) {
-			const r = Array<string>(width).fill(".");
-			r[width >> 1] = i === 0 ? "A" : frame;
-			rows.push(r.join(""));
-		}
-	}
+export function assertRow(id: string, row: string, width: number): string {
+	if (row.length !== width) throw new Error(`${id} row "${row}" has width ${row.length}, expected ${width}`);
+	return row;
+}
 
-	rows.push(edgeLight.repeat(width - 1) + frame); // roof ledge
-
-	const doorL = (width >> 1) - 1;
-	const doorR = width >> 1;
-
-	for (let i = 0; i < bodyHeight; i++) {
-		const lastTwo = i >= bodyHeight - 2;
-		const aboveDoorZone = i < bodyHeight - 2;
-		let r = "";
-		for (let j = 0; j < width; j++) {
-			let ch: string;
-			if (j === 0) ch = edgeLight;
-			else if (j === width - 1) ch = frame;
-			else if (lastTwo && (j === doorL || j === doorR)) ch = "d";
-			else if (j % 2 === 1 && (i % 4 === 1 || i % 4 === 2) && aboveDoorZone) ch = "w";
-			else if (j % 2 === 1 && i % 4 === 3 && aboveDoorZone) ch = frame; // sill
-			else if (streak && (i + j * 2) % 11 === 0) ch = streak;
-			else ch = wall;
-			r += ch;
-		}
-		rows.push(r);
-	}
-
-	rows.push(frame.repeat(width)); // base
-	return rows;
+/** Repeat a floor pattern (array of rows) until `count` rows are produced. */
+export function repeatRows(pattern: readonly string[], count: number): string[] {
+	const out: string[] = [];
+	for (let i = 0; i < count; i++) out.push(pattern[i % pattern.length]!);
+	return out;
 }
