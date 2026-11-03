@@ -1,5 +1,5 @@
 # Pixel Cityscape
-
+<img src="https://pixel-city.2217051118.workers.dev/v1/city/gilbertsibuea.svg" width="100%" alt="Kota Pixel" />
 Dynamic SVG API that renders a pixel-art city from a developer's **public** GitHub activity. One embed — no Actions, no user tokens.
 
 ```html
