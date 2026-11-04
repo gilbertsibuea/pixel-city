@@ -8,7 +8,7 @@
  *   extracted/svg/{category}/{name}.svg
  *   extracted/png/{category}/{name}.png
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import {
@@ -34,7 +34,20 @@ const S = 8; // pixel scale for building grids
 const PNG = process.argv.includes("--png");
 const BG = "#9cc7ee";
 
-type Tile = { category: string; name: string; w: number; h: number; body: string; bg?: string };
+/** `bg: null` = no fill (transparent SVG). Buildings PNG still use chroma then punch alpha. */
+type Tile = {
+	category: string;
+	name: string;
+	w: number;
+	h: number;
+	body: string;
+	bg?: string | null;
+	/** Punch this fill to alpha in the PNG (buildings). */
+	transparentPng?: boolean;
+};
+
+/** Chroma key for building PNG raster (not used in the art palette). */
+const CHROMA = "#ff00ff";
 
 function ensure(dir: string) {
 	mkdirSync(dir, { recursive: true });
@@ -76,11 +89,12 @@ function drawGrid(
 	return out;
 }
 
-function svgDoc(w: number, h: number, body: string, bg = BG): string {
+function svgDoc(w: number, h: number, body: string, bg: string | null = BG): string {
+	const backdrop = bg === null ? "" : `<rect width="100%" height="100%" fill="${bg}"/>`;
 	return (
 		`<?xml version="1.0" encoding="UTF-8"?>\n` +
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges">` +
-		`<rect width="100%" height="100%" fill="${bg}"/>` +
+		backdrop +
 		body +
 		`</svg>\n`
 	);
@@ -173,7 +187,15 @@ function collectTiles(): Tile[] {
 		if (b.smokeX !== undefined) {
 			body += smokeSvg(pad + b.smokeX * S, top - S * 2, S);
 		}
-		tiles.push({ category: "buildings", name: b.id, w, h, body });
+		tiles.push({
+			category: "buildings",
+			name: b.id,
+			w,
+			h,
+			body,
+			bg: null, // transparent SVG
+			transparentPng: true,
+		});
 	}
 
 	// --- Construction samples (one phase per target that supports it) ---
@@ -194,6 +216,8 @@ function collectTiles(): Tile[] {
 				w,
 				h,
 				body,
+				bg: null,
+				transparentPng: true,
 			});
 		}
 	}
@@ -396,22 +420,82 @@ function collectTilesFixed(): Tile[] {
 	return tiles;
 }
 
-function writeTile(tile: Tile): { svgPath: string; pngPath: string; w: number; h: number } {
+function writeTile(tile: Tile): {
+	svgPath: string;
+	pngPath: string;
+	w: number;
+	h: number;
+	body: string;
+	transparentPng: boolean;
+} {
 	const svgDir = join(OUT_SVG, tile.category);
 	const pngDir = join(OUT_PNG, tile.category);
 	ensure(svgDir);
 	ensure(pngDir);
 	const svgPath = join(svgDir, `${tile.name}.svg`);
 	const pngPath = join(pngDir, `${tile.name}.png`);
-	writeFileSync(svgPath, svgDoc(tile.w, tile.h, tile.body, tile.bg ?? BG));
-	return { svgPath, pngPath, w: tile.w, h: tile.h };
+	const bg = tile.bg === undefined ? BG : tile.bg;
+	writeFileSync(svgPath, svgDoc(tile.w, tile.h, tile.body, bg));
+	return {
+		svgPath,
+		pngPath,
+		w: tile.w,
+		h: tile.h,
+		body: tile.body,
+		transparentPng: Boolean(tile.transparentPng),
+	};
 }
 
-function rasterizePng(svgPath: string, pngPath: string, w: number, h: number): void {
-	const absSvg = `file://${join(process.cwd(), svgPath)}`;
+function punchChromaToAlpha(pngPath: string, chromaHex = CHROMA): void {
+	const r = spawnSync(
+		"python3",
+		[
+			"-c",
+			`
+from PIL import Image
+path = ${JSON.stringify(pngPath)}
+chroma = ${JSON.stringify(chromaHex)}
+im = Image.open(path).convert("RGBA")
+px = im.load()
+r0, g0, b0 = int(chroma[1:3], 16), int(chroma[3:5], 16), int(chroma[5:7], 16)
+w, h = im.size
+for y in range(h):
+    for x in range(w):
+        r, g, b, a = px[x, y]
+        if abs(r - r0) + abs(g - g0) + abs(b - b0) <= 24:
+            px[x, y] = (r, g, b, 0)
+im.save(path, "PNG")
+`,
+		],
+		{ encoding: "utf8" },
+	);
+	if (r.status !== 0) {
+		console.warn("chroma fail", pngPath, r.stderr?.slice(0, 300));
+	}
+}
+
+function rasterizePng(
+	item: {
+		svgPath: string;
+		pngPath: string;
+		w: number;
+		h: number;
+		body: string;
+		transparentPng: boolean;
+	},
+): void {
 	const chrome =
 		spawnSync("which", ["google-chrome"], { encoding: "utf8" }).stdout.trim() ||
 		"google-chrome";
+	// Chrome fills transparent SVG with white — for buildings, shoot a chroma-keyed temp SVG.
+	let shootPath = item.svgPath;
+	let tempPath: string | null = null;
+	if (item.transparentPng) {
+		tempPath = item.svgPath.replace(/\.svg$/, ".chroma.svg");
+		writeFileSync(tempPath, svgDoc(item.w, item.h, item.body, CHROMA));
+		shootPath = tempPath;
+	}
+	const absSvg = `file://${join(process.cwd(), shootPath)}`;
 	const r = spawnSync(
 		chrome,
 		[
@@ -419,14 +503,24 @@ function rasterizePng(svgPath: string, pngPath: string, w: number, h: number): v
 			"--disable-gpu",
 			"--no-sandbox",
 			"--hide-scrollbars",
-			`--window-size=${Math.max(w, 32)},${Math.max(h, 32)}`,
-			`--screenshot=${join(process.cwd(), pngPath)}`,
+			`--window-size=${Math.max(item.w, 32)},${Math.max(item.h, 32)}`,
+			`--screenshot=${join(process.cwd(), item.pngPath)}`,
 			absSvg,
 		],
 		{ encoding: "utf8" },
 	);
 	if (r.status !== 0) {
-		console.warn("png fail", svgPath, r.stderr?.slice(0, 200));
+		console.warn("png fail", item.svgPath, r.stderr?.slice(0, 200));
+	}
+	if (item.transparentPng) {
+		punchChromaToAlpha(item.pngPath);
+	}
+	if (tempPath) {
+		try {
+			unlinkSync(tempPath);
+		} catch {
+			/* ignore */
+		}
 	}
 }
 
@@ -434,14 +528,21 @@ const tiles = collectTilesFixed();
 ensure(OUT_ROOT);
 ensure(OUT_SVG);
 ensure(OUT_PNG);
-const written: Array<{ svgPath: string; pngPath: string; w: number; h: number }> = [];
+const written: Array<{
+	svgPath: string;
+	pngPath: string;
+	w: number;
+	h: number;
+	body: string;
+	transparentPng: boolean;
+}> = [];
 for (const tile of tiles) {
 	written.push(writeTile(tile));
 }
 console.log(`wrote ${written.length} SVGs → ${OUT_SVG}/{category}/`);
 
 if (PNG) {
-	for (const item of written) rasterizePng(item.svgPath, item.pngPath, item.w, item.h);
+	for (const item of written) rasterizePng(item);
 	console.log(`rasterized ${written.length} PNGs → ${OUT_PNG}/{category}/`);
 }
 
