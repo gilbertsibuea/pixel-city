@@ -167,3 +167,6 @@ dist
 .wrangler/
 construction-dump.json
 linkedin-dump.json
+
+# Local sprite extracts (SVG + PNG, category folders)
+extracted/

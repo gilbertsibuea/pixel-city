@@ -9,7 +9,8 @@
     "test": "vitest",
     "cf-typegen": "wrangler types",
     "construction-sheet": "npx tsx scripts/dump-construction.mts public/construction-dump.json && python3 scripts/render-construction-sheet.py && npx tsx scripts/render-construction-svg.mts",
-    "linkedin-sheet": "npx tsx scripts/render-linkedin-sheets.mts && npx tsx scripts/dump-linkedin.mts public/linkedin-dump.json && python3 scripts/render-linkedin-png.py"
+    "linkedin-sheet": "npx tsx scripts/render-linkedin-sheets.mts && npx tsx scripts/dump-linkedin.mts public/linkedin-dump.json && python3 scripts/render-linkedin-png.py",
+    "extract-sprites": "npx tsx scripts/extract-sprites.mts --png"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.4.3",
